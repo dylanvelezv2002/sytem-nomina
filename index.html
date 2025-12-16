@@ -3,131 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Roles - Nómina</title>
+    <title>Nómina Doméstica - Dylan Vélez</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 p-10">
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
 
-    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-lg p-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Generador de Rol de Pagos</h2>
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Mes y Año</label>
-                <input type="month" id="fechaMes" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">
+                <i class="fas fa-calculator mr-2"></i>Generar Nuevo Rol
+            </h2>
+
+            <div class="bg-blue-50 p-3 rounded-lg text-xs text-blue-800 mb-4 space-y-1">
+                <p><strong>Empleador:</strong> DYLAN JOEL VELEZ VILLASAGUA</p>
+                <p><strong>Trabajador:</strong> MONICA ALEXANDRA MATUTE IBARRA</p>
+                <p><strong>Cargo:</strong> EMPLEADA DOMÉSTICA</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Días Trabajados</label>
-                    <input type="number" id="diasTrabajados" value="30" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700">Mes a Pagar</label>
+                        <input type="month" id="mesPago" class="w-full border rounded p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700">Fecha Emisión</label>
+                        <input type="date" id="fechaEmision" class="w-full border rounded p-2 text-sm">
+                    </div>
                 </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700">Días Trabajados</label>
+                        <input type="number" id="diasTrab" value="30" class="w-full border rounded p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700">Horas Extras ($)</label>
+                        <input type="number" id="extras" value="0.00" step="0.01" class="w-full border rounded p-2 text-sm">
+                    </div>
+                </div>
+
+                <div class="border p-3 rounded bg-gray-50">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="pagarDecimos" class="form-checkbox h-4 w-4 text-blue-600">
+                        <span class="text-xs font-bold text-gray-700">¿Incluir Décimos Mensualizados?</span>
+                    </label>
+                    <p class="text-[10px] text-gray-500 mt-1">Marca solo si acordaron pago mensual (no acumulado).</p>
+                </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Horas Extras ($)</label>
-                    <input type="number" id="extras" value="0.00" step="0.01" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                    <label class="block text-xs font-bold text-red-700">Anticipos o Préstamos ($)</label>
+                    <input type="number" id="prestamos" value="0.00" step="0.01" class="w-full border border-red-200 rounded p-2 text-sm bg-red-50">
+                </div>
+
+                <div class="bg-gray-800 text-white p-4 rounded-lg mt-4">
+                    <div class="flex justify-between text-sm"><span>Sueldo Base (Proporcional):</span> <span>$264.38</span></div>
+                    <div class="flex justify-between text-sm text-green-400" id="rowDecimos" style="display:none"><span>+ Décimos:</span> <span id="valDecimos">$0.00</span></div>
+                    <div class="flex justify-between text-sm text-red-300"><span>- IESS (9.45%):</span> <span id="valIess">$24.98</span></div>
+                    <div class="flex justify-between text-sm text-red-300"><span>- Préstamos:</span> <span id="valPrestamos">$0.00</span></div>
+                    <div class="border-t border-gray-600 my-2"></div>
+                    <div class="flex justify-between text-xl font-bold"><span>A PAGAR:</span> <span id="totalLiquido">$239.40</span></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <button onclick="generarPDF()" class="bg-red-600 hover:bg-red-700 text-white py-2 rounded shadow transition text-sm font-bold">
+                        <i class="fas fa-file-pdf mr-1"></i> Descargar PDF
+                    </button>
+                    <button onclick="guardarEnHistorial()" class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded shadow transition text-sm font-bold">
+                        <i class="fas fa-save mr-1"></i> Guardar Dato
+                    </button>
                 </div>
             </div>
+        </div>
 
-            <div class="bg-gray-50 p-4 rounded-md border text-sm">
-                <p class="flex justify-between"><span>Sueldo Base (4.5h):</span> <span class="font-bold">$264.38</span></p>
-                <p class="flex justify-between text-red-600"><span>IESS (9.45%):</span> <span class="font-bold">-$24.98</span></p>
-                <div class="border-t my-2"></div>
-                <p class="flex justify-between text-lg font-bold text-green-700"><span>A Pagar:</span> <span id="totalPagar">$239.40</span></p>
+        <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col h-full">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold text-gray-800"><i class="fas fa-history mr-2"></i>Historial</h2>
+                <button onclick="exportarExcel()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold transition">
+                    <i class="fas fa-file-excel mr-1"></i> Bajar Excel
+                </button>
             </div>
-
-            <button onclick="generarPDF()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition">
-                Descargar PDF Firmable
-            </button>
+            
+            <div class="overflow-auto flex-grow">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-gray-100 text-gray-600 uppercase">
+                        <tr>
+                            <th class="p-2">Mes</th>
+                            <th class="p-2">Rol ($)</th>
+                            <th class="p-2">Firma</th>
+                            <th class="p-2">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaHistorial" class="divide-y">
+                        </tbody>
+                </table>
+                <p id="emptyMsg" class="text-center text-gray-400 mt-10 text-sm">No hay registros guardados aún.</p>
+            </div>
+            <button onclick="borrarHistorial()" class="mt-4 text-xs text-red-400 hover:text-red-600 underline text-center w-full">Borrar todo el historial</button>
         </div>
     </div>
 
     <script>
-        // Configuración Fija (Según tu contrato)
-        const SUELDO_BASE = 264.38; 
-        const IESS_PORCENTAJE = 0.0945; 
-        
-        // 1. Lógica de Cálculo en tiempo real (Opcional si quieres que se mueva al cambiar días)
-        // Por ahora lo dejé fijo al contrato estándar.
+        // --- 1. CONFIGURACIÓN Y DATOS ---
+        const DATOS = {
+            empleador: { nombre: "DYLAN JOEL VELEZ VILLASAGUA", ci: "0926413667" },
+            trabajador: { nombre: "MONICA ALEXANDRA MATUTE IBARRA", ci: "0201600202", cargo: "EMPLEADA DOMÉSTICA" },
+            direccion: "AV. DR. HUMBERTO DEL POZO SALTOS (SECTOR HUMBERDINA)",
+            sueldoBase: 264.38, // Proporcional a 4.5 horas
+            iessPorcentaje: 0.0945
+        };
 
-        // 2. Función Generadora de PDF
-        async function generarPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+        // Al cargar la página
+        window.onload = function() {
+            // Setear fecha actual
+            const today = new Date();
+            document.getElementById('mesPago').value = today.toISOString().slice(0, 7);
+            document.getElementById('fechaEmision').value = today.toISOString().slice(0, 10);
             
-            // Datos del Input
-            const fechaInput = document.getElementById('fechaMes').value;
-            const [year, month] = fechaInput.split('-');
-            const dias = document.getElementById('diasTrabajados').value;
+            cargarHistorial(); // Cargar tabla
+            calcularValores(); // Calcular inicial
+        };
+
+        // --- 2. CÁLCULOS EN TIEMPO REAL ---
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', calcularValores);
+        });
+
+        function calcularValores() {
+            const dias = parseInt(document.getElementById('diasTrab').value) || 0;
             const extras = parseFloat(document.getElementById('extras').value) || 0;
+            const prestamos = parseFloat(document.getElementById('prestamos').value) || 0;
+            const incluyeDecimos = document.getElementById('pagarDecimos').checked;
 
-            // Cálculos
-            const iessPersonal = (SUELDO_BASE * IESS_PORCENTAJE).toFixed(2);
-            const totalIngresos = (SUELDO_BASE + extras).toFixed(2);
-            const liquido = (totalIngresos - iessPersonal).toFixed(2);
+            // Lógica: Si trabaja menos de 30 días, se prorratea el sueldo base
+            // (Opcional, pero legalmente correcto. Si prefieres fijo, quita esta línea y usa DATOS.sueldoBase)
+            let sueldoProporcional = (DATOS.sueldoBase / 30) * dias; 
             
-            // Nombre del mes en texto
-            const dateObj = new Date(year, month - 1);
-            const mesNombre = dateObj.toLocaleString('es-ES', { month: 'long' }).toUpperCase();
-
-            // --- DISEÑO DEL PDF ---
-            doc.setFontSize(16);
-            doc.text(`ROL DE PAGOS INDIVIDUAL`, 105, 20, null, null, 'center');
-            doc.setFontSize(12);
-            doc.text(`PERÍODO: ${mesNombre} ${year}`, 105, 30, null, null, 'center');
-
-            doc.setFontSize(10);
-            doc.text(`EMPLEADO: [NOMBRE DE LA EMPLEADA]`, 20, 50);
-            doc.text(`CARGO: EMPLEADA DOMÉSTICA`, 20, 56);
-            doc.text(`DÍAS LABORADOS: ${dias}`, 150, 50);
-
-            // Línea separadora
-            doc.line(20, 65, 190, 65);
-
-            // Tabla Simple (Manual coordinates)
-            let y = 75;
-            doc.text("CONCEPTO", 20, y);
-            doc.text("INGRESOS", 100, y, null, null, 'right');
-            doc.text("DESCUENTOS", 150, y, null, null, 'right');
+            // IESS (Aporte personal 9.45%)
+            let aporteIess = (sueldoProporcional + extras) * DATOS.iessPorcentaje;
             
-            y += 10;
-            doc.text("Sueldo Unificado (Jornada Parcial)", 20, y);
-            doc.text(`$ ${SUELDO_BASE.toFixed(2)}`, 100, y, null, null, 'right');
-
-            if(extras > 0){
-                y += 7;
-                doc.text("Horas Suplementarias/Extras", 20, y);
-                doc.text(`$ ${extras.toFixed(2)}`, 100, y, null, null, 'right');
+            // Décimos (Aprox la doceava parte del ingreso si se mensualiza)
+            let valorDecimos = 0;
+            if (incluyeDecimos) {
+                // 13ro (Sueldo + Extras) / 12
+                // 14to (SBU / 12) -> SBU 2025 asumido $460 o $470. Usaremos $470.
+                let decimotercero = (sueldoProporcional + extras) / 12;
+                let decimocuarto = 470 / 12; 
+                valorDecimos = decimotercero + decimocuarto;
+                document.getElementById('rowDecimos').style.display = 'flex';
+            } else {
+                document.getElementById('rowDecimos').style.display = 'none';
             }
 
-            y += 7;
-            doc.text("Aporte Personal IESS (9.45%)", 20, y);
-            doc.text(`$ ${iessPersonal}`, 150, y, null, null, 'right');
+            let liquido = (sueldoProporcional + extras + valorDecimos) - aporteIess - prestamos;
 
-            // Totales
-            y += 15;
-            doc.line(20, y-5, 190, y-5);
-            doc.setFont(undefined, 'bold');
-            doc.text("LÍQUIDO A RECIBIR:", 20, y);
-            doc.text(`$ ${liquido}`, 190, y, null, null, 'right');
-            
-            // Sección Firmas
-            y += 40;
-            doc.setFont(undefined, 'normal');
-            doc.text("_____________________________", 20, y);
-            doc.text("_____________________________", 120, y);
-            doc.text("EMPLEADOR", 20, y+5);
-            doc.text("RECIBÍ CONFORME (Trabajadora)", 120, y+5);
+            // Actualizar UI
+            document.getElementById('valIess').innerText = `$ ${aporteIess.toFixed(2)}`;
+            document.getElementById('valPrestamos').innerText = `$ ${prestamos.toFixed(2)}`;
+            document.getElementById('valDecimos').innerText = `$ ${valorDecimos.toFixed(2)}`;
+            document.getElementById('totalLiquido').innerText = `$ ${liquido.toFixed(2)}`;
 
-            // Guardar
-            doc.save(`Rol_Pago_${mesNombre}_${year}.pdf`);
+            return { sueldoProporcional, extras, valorDecimos, aporteIess, prestamos, liquido };
         }
 
-        // Setear fecha actual por defecto
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
-        document.getElementById('fechaMes').value = `${yyyy}-${mm}`;
+        // --- 3. GENERAR PDF ---
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const calc = calcularValores();
+            const mesInput = document.getElementById('mesPago').value;
+            const fechaEmision = document.getElementById('fechaEmision').value;
+
+            // Formato de fechas
+            const [anio, mes] = mesInput.split('-');
+            const nombreMes = new Date(anio, mes - 1).toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+
+            // TÍTULOS
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text("ROL DE PAGOS INDIVIDUAL", 105, 20, null, null, 'center');
+            doc.setFontSize(10);
+            doc.text(`PERÍODO: ${nombreMes} ${anio}`, 105, 26, null, null, 'center');
+
+            // CAJA DE DATOS EMPLEADOR/EMPLEADO
+            doc.setDrawColor(200);
+            doc.rect(14, 32, 182, 38); // Caja
+            
+            doc.setFontSize(9);
+            doc.text(`EMPLEADOR: ${DATOS.empleador.nombre}`, 18, 40);
+            doc.text(`RUC/C.I.: ${DATOS.empleador.ci}`, 18, 45);
+            doc.text(`DIRECCIÓN: AV. HUMBERTO DEL POZO (SECTOR HUMBERDINA)`, 18, 50);
+
+            doc.text(`TRABAJADOR: ${DATOS.trabajador.nombre}`, 18, 60);
+            doc.text(`C.I.: ${DATOS.trabajador.ci}`, 120, 60);
+            doc.text(`CARGO: ${DATOS.trabajador.cargo}`, 18, 65);
+            
+            // TABLA DE VALORES
+            let y = 80;
+            // Encabezados
+            doc.setFillColor(230);
+            doc.rect(14, y, 182, 8, 'F');
+            doc.setFont(undefined, 'bold');
+            doc.text("CONCEPTO", 18, y+5);
+            doc.text("INGRESOS", 110, y+5, null, null, 'right');
+            doc.text("EGRESOS", 160, y+5, null, null, 'right');
+
+            y += 14;
+            doc.setFont(undefined, 'normal');
+
+            // Filas
+            doc.text(`Sueldo Mensual (${document.getElementById('diasTrab').value} días)`, 18, y);
+            doc.text(calc.sueldoProporcional.toFixed(2), 110, y, null, null, 'right');
+
+            if(calc.extras > 0){ y+=6; doc.text("Horas Suplementarias", 18, y); doc.text(calc.extras.toFixed(2), 110, y, null, null, 'right'); }
+            if(calc.valorDecimos > 0){ y+=6; doc.text("Décimos Mensualizados", 18, y); doc.text(calc.valorDecimos.toFixed(2), 110, y, null, null, 'right'); }
+            
+            y+=6;
+            doc.text("Aporte Personal IESS (9.45%)", 18, y);
+            doc.text(calc.aporteIess.toFixed(2), 160, y, null, null, 'right');
+
+            if(calc.prestamos > 0){ y+=6; doc.text("Préstamos / Anticipos", 18, y); doc.text(calc.prestamos.toFixed(2), 160, y, null, null, 'right'); }
+
+            // LÍNEA FINAL
+            y += 10;
+            doc.setLineWidth(0.5);
+            doc.line(14, y, 196, y);
+            y += 8;
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text("LÍQUIDO A RECIBIR:", 18, y);
+            doc.text(`$ ${calc.liquido.toFixed(2)}`, 160, y, null, null, 'right');
+
+            // INFO PAGO
+            y += 15;
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Fecha de Emisión: ${fechaEmision}`, 18, y);
+            doc.text(`Forma de Pago: TRANSFERENCIA BANCARIA`, 18, y+5);
+
+            // FIRMAS
+            y += 35;
+            doc.text("_______________________________", 25, y);
+            doc.text("_______________________________", 120, y);
+            doc.text("EMPLEADOR", 45, y+5);
+            doc.text("RECIBÍ CONFORME", 135, y+5);
+            doc.text(`C.I.: ${DATOS.empleador.ci}`, 45, y+10);
+            doc.text(`C.I.: ${DATOS.trabajador.ci}`, 135, y+10);
+
+            doc.save(`Rol_${nombreMes}_${anio}.pdf`);
+        }
+
+        // --- 4. HISTORIAL Y EXCEL (LocalStorage) ---
+        function guardarEnHistorial() {
+            const calc = calcularValores();
+            const registro = {
+                id: Date.now(),
+                mes: document.getElementById('mesPago').value,
+                emision: document.getElementById('fechaEmision').value,
+                liquido: calc.liquido.toFixed(2),
+                dias: document.getElementById('diasTrab').value,
+                extras: calc.extras.toFixed(2),
+                prestamos: calc.prestamos.toFixed(2)
+            };
+
+            let historial = JSON.parse(localStorage.getItem('nomina_historial')) || [];
+            historial.push(registro);
+            localStorage.setItem('nomina_historial', JSON.stringify(historial));
+            cargarHistorial();
+            alert("Registro guardado correctamente");
+        }
+
+        function cargarHistorial() {
+            let historial = JSON.parse(localStorage.getItem('nomina_historial')) || [];
+            const tbody = document.getElementById('tablaHistorial');
+            const emptyMsg = document.getElementById('emptyMsg');
+            tbody.innerHTML = '';
+
+            if(historial.length === 0) {
+                emptyMsg.style.display = 'block';
+                return;
+            }
+            emptyMsg.style.display = 'none';
+
+            // Ordenar por fecha (más reciente primero)
+            historial.sort((a, b) => b.mes.localeCompare(a.mes));
+
+            historial.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2 border-b">${item.mes}</td>
+                    <td class="p-2 border-b font-bold">$${item.liquido}</td>
+                    <td class="p-2 border-b text-gray-400 italic">Pendiente</td>
+                    <td class="p-2 border-b">
+                        <button onclick="eliminarItem(${item.id})" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function eliminarItem(id) {
+            if(!confirm("¿Borrar este registro?")) return;
+            let historial = JSON.parse(localStorage.getItem('nomina_historial')) || [];
+            historial = historial.filter(item => item.id !== id);
+            localStorage.setItem('nomina_historial', JSON.stringify(historial));
+            cargarHistorial();
+        }
+
+        function borrarHistorial() {
+            if(confirm("¿Estás seguro de borrar TODO el historial? No se podrá recuperar.")) {
+                localStorage.removeItem('nomina_historial');
+                cargarHistorial();
+            }
+        }
+
+        function exportarExcel() {
+            let historial = JSON.parse(localStorage.getItem('nomina_historial')) || [];
+            if(historial.length === 0) {
+                alert("No hay datos para exportar");
+                return;
+            }
+
+            // Preparar datos para Excel
+            const datosExcel = historial.map(item => ({
+                "Mes de Pago": item.mes,
+                "Fecha Emisión": item.emision,
+                "Días Trabajados": item.dias,
+                "Sueldo Líquido": item.liquido,
+                "Horas Extras": item.extras,
+                "Préstamos": item.prestamos,
+                "Empleado": DATOS.trabajador.nombre
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(datosExcel);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Historial Pagos");
+            XLSX.writeFile(wb, "Historial_Nomina_Completo.xlsx");
+        }
     </script>
 </body>
 </html>
