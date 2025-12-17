@@ -7,198 +7,202 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Ocultar el contenedor del QR en pantalla (solo sirve para generar la imagen) */
-        #qr-code-container { display: none; }
+        /* Elementos ocultos para generación */
+        #barcode-container { display: none; }
+        
+        /* PATRÓN DE SEGURIDAD (TRAMADO DE FONDO) */
+        .security-pattern {
+            background-color: #ffffff;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 10px 10px;
+        }
+
+        /* Estilos para estado Anulado */
+        .row-anulado { background-color: #fef2f2 !important; opacity: 0.8; }
+        .row-anulado td { text-decoration: line-through; color: #991b1b; }
+        .row-anulado .no-strike { text-decoration: none; }
+        
+        /* Animación de carga */
+        .loading-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(255,255,255,0.8); z-index: 50;
+            display: none; justify-content: center; align-items: center;
+        }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen p-4 md:p-8 font-sans">
 
+    <div id="loading" class="loading-overlay">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+    </div>
+
     <nav class="bg-slate-800 text-white p-4 rounded-xl mb-6 flex justify-between items-center shadow-lg max-w-6xl mx-auto">
-        <h1 class="text-xl font-bold"><i class="fas fa-shield-alt mr-2 text-emerald-400"></i>Sistema de Nómina Seguro</h1>
+        <h1 class="text-xl font-bold flex items-center gap-2">
+            <i class="fas fa-shield-alt text-emerald-400"></i>
+            <span>Sistema Nómina <span class="text-xs text-gray-400 font-normal">| Conectado a Drive</span></span>
+        </h1>
         <div class="space-x-2">
-            <button onclick="descargarBackup()" class="bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-xs font-bold transition">
-                <i class="fas fa-download mr-1"></i> Respaldo
+            <button onclick="cargarHistorialCloud()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-xs font-bold transition shadow">
+                <i class="fas fa-sync mr-1"></i> Actualizar Datos
             </button>
-            <label for="importFile" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-xs font-bold transition cursor-pointer">
-                <i class="fas fa-upload mr-1"></i> Restaurar
-            </label>
-            <input type="file" id="importFile" class="hidden" onchange="importarBackup(this)">
         </div>
     </nav>
 
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        <div class="bg-white rounded-xl shadow-xl p-6 border-t-4 border-slate-600">
-            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2 flex justify-between">
-                <span>Generar Nuevo Rol</span>
-                <span class="text-xs bg-slate-200 px-2 py-1 rounded text-slate-600" id="hashDisplay">HASH: ---</span>
+        <div class="bg-white rounded-xl shadow-xl p-6 border-t-4 border-slate-600 security-pattern relative">
+            
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2 flex justify-between items-center bg-white/80 backdrop-blur-sm p-2 rounded">
+                <span>Generar Rol</span>
+                <span class="text-[10px] font-mono bg-slate-200 px-2 py-1 rounded text-slate-600 border border-slate-300" id="hashDisplay">HASH: ---</span>
             </h2>
 
-            <div class="bg-slate-50 p-3 rounded-lg text-xs text-slate-700 mb-4 border border-slate-200">
+            <div class="bg-slate-50 p-3 rounded-lg text-xs text-slate-700 mb-4 border border-slate-200 shadow-sm">
                 <p><strong>Empleador:</strong> DYLAN JOEL VELEZ VILLASAGUA</p>
-                <p><strong>Trabajador:</strong> MONICA ALEXANDRA MATUTE IBARRA</p>
-                <p class="mt-1 text-[10px] text-gray-400">Pago en EFECTIVO | Sistema con Validación Hash</p>
+                <p><strong>Trabajadora:</strong> MONICA ALEXANDRA MATUTE IBARRA</p>
+                <p class="mt-1 text-[10px] text-gray-400">Cargo: EMPLEADA DOMÉSTICA</p>
             </div>
 
             <div class="space-y-4">
-                <div class="bg-yellow-50 p-3 rounded border border-yellow-200 relative">
-                    <p class="text-xs font-bold text-gray-600 mb-2 uppercase">Período</p>
+                <div class="bg-blue-50 p-3 rounded border border-blue-100 relative">
+                    <p class="text-xs font-bold text-blue-800 mb-2 uppercase tracking-wide">Periodo Laboral</p>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700">Desde</label>
-                            <input type="date" id="fechaInicio" class="w-full border rounded p-2 text-sm">
+                            <label class="block text-xs font-bold text-gray-600">Desde</label>
+                            <input type="date" id="fechaInicio" class="w-full border rounded p-1.5 text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-700">Hasta</label>
-                            <input type="date" id="fechaFin" class="w-full border rounded p-2 text-sm">
+                            <label class="block text-xs font-bold text-gray-600">Hasta</label>
+                            <input type="date" id="fechaFin" class="w-full border rounded p-1.5 text-sm">
                         </div>
                     </div>
-                    <div class="mt-2 flex justify-between items-center">
-                        <span class="text-xs text-gray-500">Días calculados: <strong id="labelDias" class="text-blue-600">0</strong></span>
+                    <div class="mt-2 text-right">
+                        <span class="text-xs text-blue-700 font-bold bg-white px-2 py-1 rounded border border-blue-100">
+                            Días: <span id="labelDias">0</span>
+                        </span>
                         <input type="hidden" id="diasTrab">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-700">Horas Extras ($)</label>
-                        <input type="number" id="extras" value="0.00" step="0.01" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input type="number" id="extras" value="0.00" step="0.01" class="w-full border rounded p-1.5 text-sm">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700">Préstamos ($)</label>
-                        <input type="number" id="prestamos" value="0.00" step="0.01" class="w-full border rounded p-2 text-sm text-red-600">
+                        <input type="number" id="prestamos" value="0.00" step="0.01" class="w-full border border-red-200 rounded p-1.5 text-sm text-red-600 bg-red-50">
                     </div>
                 </div>
 
-                <div class="border p-2 rounded bg-slate-50">
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="checkbox" id="pagarDecimos" class="w-4 h-4 text-blue-600">
-                        <span class="text-xs font-bold text-gray-700">Incluir Décimos</span>
-                    </label>
+                <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded border">
+                    <input type="checkbox" id="pagarDecimos" class="w-4 h-4 text-emerald-600 rounded">
+                    <label for="pagarDecimos" class="text-xs font-bold text-gray-700">Incluir Décimos</label>
                 </div>
                 
                 <div>
                      <label class="block text-xs font-bold text-gray-500">Fecha de Firma</label>
-                     <input type="date" id="fechaEmision" class="w-full border rounded p-1 text-xs">
+                     <input type="date" id="fechaEmision" class="w-full border rounded p-1.5 text-xs">
                 </div>
 
-                <div class="bg-slate-800 text-white p-4 rounded-lg shadow-inner text-sm">
-                    <div class="flex justify-between"><span>Sueldo Base:</span> <span id="viewBase">$0.00</span></div>
-                    <div id="resumenDecimos" class="hidden text-green-400 flex justify-between"><span>+ Décimos:</span> <span id="viewTotalDecimos">$0.00</span></div>
+                <div class="bg-slate-900 text-white p-4 rounded-lg shadow-md text-sm space-y-1">
+                    <div class="flex justify-between text-gray-400"><span>Sueldo Base:</span> <span id="viewBase" class="text-white">$0.00</span></div>
+                    <div id="resumenDecimos" class="hidden flex justify-between text-emerald-400"><span>+ Décimos:</span> <span id="viewTotalDecimos">$0.00</span></div>
                     <div class="flex justify-between text-red-300"><span>- IESS (9.45%):</span> <span id="viewIess">$0.00</span></div>
                     <div class="flex justify-between text-red-300"><span>- Préstamos:</span> <span id="viewPrestamos">$0.00</span></div>
-                    <div class="border-t border-slate-600 my-2"></div>
-                    <div class="flex justify-between text-xl font-bold text-yellow-400">
+                    <div class="border-t border-slate-700 my-2"></div>
+                    <div class="flex justify-between items-center text-lg font-bold text-yellow-400">
                         <span>A PAGAR:</span> <span id="totalLiquido">$0.00</span>
                     </div>
                 </div>
 
-                <button onclick="procesarRol()" class="w-full bg-slate-900 hover:bg-black text-white py-3 rounded-lg shadow-lg transition text-sm font-bold flex justify-center items-center">
-                    <i class="fas fa-qrcode mr-2"></i> Generar, Guardar y Descargar PDF
+                <button onclick="procesarRol()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg shadow-lg transition text-sm font-bold flex justify-center items-center gap-2">
+                    <i class="fas fa-barcode"></i> Guardar y Generar PDF
                 </button>
             </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-xl p-6 border-t-4 border-emerald-600 flex flex-col h-full">
+            <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center">
+                <i class="fas fa-database mr-2 text-emerald-600"></i>Historial Google Sheets
+            </h2>
             
-            <div class="mb-4">
-                <h2 class="text-lg font-bold text-gray-800 mb-2"><i class="fas fa-database mr-2"></i>Base de Datos</h2>
-                <div class="relative">
-                    <input type="text" id="buscadorHash" placeholder="Buscar por HASH o Fecha..." class="w-full border border-gray-300 rounded-lg pl-10 p-2 text-sm shadow-sm" onkeyup="filtrarHistorial()">
-                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                </div>
+            <div class="mb-2 relative">
+                <input type="text" id="buscador" placeholder="Buscar..." class="w-full border rounded p-2 text-sm pl-8" onkeyup="filtrarTabla()">
+                <i class="fas fa-search absolute left-2.5 top-2.5 text-gray-400"></i>
             </div>
             
-            <div class="overflow-auto flex-grow border rounded-lg">
-                <table class="w-full text-xs text-left">
-                    <thead class="bg-slate-100 text-slate-600 uppercase sticky top-0">
+            <div class="overflow-auto flex-grow border rounded-lg bg-gray-50 h-96">
+                <table class="w-full text-xs text-left border-collapse">
+                    <thead class="bg-slate-200 text-slate-700 uppercase font-bold sticky top-0">
                         <tr>
-                            <th class="p-3">Período / Hash</th>
-                            <th class="p-3">Monto</th>
-                            <th class="p-3 text-center">Opción</th>
+                            <th class="p-3">Periodo / Hash</th>
+                            <th class="p-3 text-right">Monto</th>
+                            <th class="p-3 text-center">Estado</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaHistorial" class="divide-y divide-gray-100"></tbody>
+                    <tbody id="tablaHistorial" class="divide-y divide-gray-200 bg-white">
+                        </tbody>
                 </table>
-                <p id="emptyMsg" class="text-center text-gray-400 mt-10 text-sm">No hay registros.</p>
-            </div>
-            
-            <div class="mt-4 grid grid-cols-2 gap-2">
-                <button onclick="exportarExcel()" class="bg-green-600 hover:bg-green-700 text-white py-2 rounded text-xs font-bold">
-                    <i class="fas fa-file-excel mr-1"></i> Reporte Excel
-                </button>
-                <button onclick="borrarHistorial()" class="text-red-400 hover:text-red-600 text-xs underline">
-                    Borrar Todo
-                </button>
             </div>
         </div>
     </div>
 
-    <div id="qr-code-container"></div>
+    <div id="barcode-container">
+        <svg id="barcode"></svg>
+    </div>
 
     <script>
+        // ==========================================
+        //  CONFIGURACIÓN - PEGA TU URL DE APPS SCRIPT AQUÍ
+        // ==========================================
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwZIcwaAYvjIdGcWBStTBfuNnFUJYlIKr9V87P0Yxt1top6t0RB01iTRPuJOgRY2_Rg/exec'; 
+        
+        // Configuración Fija
         const CONFIG = {
-            empleador: { nombre: "DYLAN JOEL VELEZ VILLASAGUA", ci: "0926413667", direccion: "AV. DR. HUMBERTO DEL POZO SALTOS (SECTOR HUMBERDINA)" },
-            trabajador: { nombre: "MONICA ALEXANDRA MATUTE IBARRA", ci: "0201600202", cargo: "EMPLEADA DOMÉSTICA" },
-            sueldoBaseFull: 264.38, 
-            sbu2025: 470.00,
-            iessPorc: 0.0945,
-            formaPago: "EFECTIVO"
+            empleador: { nombre: "DYLAN JOEL VELEZ VILLASAGUA", ci: "0926413667" },
+            trabajador: { nombre: "MONICA ALEXANDRA MATUTE IBARRA", ci: "0201600202" },
+            sueldoBaseFull: 264.38, sbu2025: 470.00, iessPorc: 0.0945
         };
 
         let hashActual = "";
+        let dbCache = []; // Almacenamos los datos aquí para no consultar a Google cada vez que buscamos
 
         window.onload = function() {
-            const today = new Date();
-            document.getElementById('fechaInicio').valueAsDate = new Date(today.getFullYear(), today.getMonth(), 1);
-            document.getElementById('fechaFin').valueAsDate = today;
-            document.getElementById('fechaEmision').valueAsDate = today;
-            
-            generarHash(); // Generar un hash inicial
-            cargarHistorial();
-            calcularDiasAutomaticos(); 
+            const t = new Date();
+            document.getElementById('fechaInicio').valueAsDate = new Date(t.getFullYear(), t.getMonth(), 1);
+            document.getElementById('fechaFin').valueAsDate = t;
+            document.getElementById('fechaEmision').valueAsDate = t;
+            generarHash();
+            calcularDiasAutomaticos();
+            cargarHistorialCloud(); // Carga inicial
         };
 
-        // --- 1. SEGURIDAD: GENERADOR DE HASH ---
+        // --- LÓGICA DE CÁLCULO (IGUAL QUE ANTES) ---
         function generarHash() {
-            const chars = 'ABCDEF0123456789';
-            let randomStr = '';
-            for (let i = 0; i < 6; i++) {
-                randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            const date = new Date();
-            const mes = (date.getMonth() + 1).toString().padStart(2, '0');
-            // Formato: ROL-MES-RANDOM (Ej: ROL-12-A7B2)
-            hashActual = `ROL-${mes}-${randomStr}`;
+            const r = Math.random().toString(36).substring(2, 6).toUpperCase();
+            const m = (new Date().getMonth() + 1).toString().padStart(2,'0');
+            hashActual = `ROL-${m}-${r}`;
             document.getElementById('hashDisplay').innerText = `HASH: ${hashActual}`;
         }
 
-        // Event Listeners
         document.getElementById('fechaInicio').addEventListener('change', calcularDiasAutomaticos);
         document.getElementById('fechaFin').addEventListener('change', calcularDiasAutomaticos);
-        document.querySelectorAll('input').forEach(input => {
-            if(input.id !== 'fechaInicio' && input.id !== 'fechaFin') {
-                input.addEventListener('input', calcularValores);
-                input.addEventListener('change', calcularValores);
-            }
+        ['extras', 'prestamos', 'pagarDecimos'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calcularValores);
         });
 
-        // --- 2. CÁLCULOS (Lógica de negocio) ---
         function calcularDiasAutomaticos() {
-            const f1 = document.getElementById('fechaInicio').value;
-            const f2 = document.getElementById('fechaFin').value;
-            if(f1 && f2) {
-                const date1 = new Date(f1); const date2 = new Date(f2);
-                let diffDays = Math.ceil(Math.abs(date2 - date1) / (1000 * 60 * 60 * 24)) + 1; 
-                if (date2 < date1) diffDays = 0;
-                document.getElementById('diasTrab').value = diffDays;
-                document.getElementById('labelDias').innerText = diffDays;
-                calcularValores(); 
-            }
+            const f1 = new Date(document.getElementById('fechaInicio').value);
+            const f2 = new Date(document.getElementById('fechaFin').value);
+            const diff = Math.ceil((f2 - f1) / (86400000)) + 1;
+            document.getElementById('diasTrab').value = diff > 0 ? diff : 0;
+            document.getElementById('labelDias').innerText = diff > 0 ? diff : 0;
+            calcularValores();
         }
 
         function calcularValores() {
@@ -207,239 +211,250 @@
             const prestamos = parseFloat(document.getElementById('prestamos').value) || 0;
             const incluyeDecimos = document.getElementById('pagarDecimos').checked;
 
-            let sueldoGanado = (CONFIG.sueldoBaseFull / 30) * dias;
-            let decimoTercero = 0; let decimoCuarto = 0;
-            
-            if (incluyeDecimos) {
-                decimoTercero = (sueldoGanado + extras) / 12;
-                decimoCuarto = (CONFIG.sbu2025 / 360) * dias;
-                document.getElementById('resumenDecimos').classList.remove('hidden');
-            } else {
-                document.getElementById('resumenDecimos').classList.add('hidden');
-            }
+            let sueldo = (CONFIG.sueldoBaseFull / 30) * dias;
+            let d3 = incluyeDecimos ? (sueldo + extras) / 12 : 0;
+            let d4 = incluyeDecimos ? (CONFIG.sbu2025 / 360) * dias : 0;
+            let iess = (sueldo + extras) * CONFIG.iessPorc;
+            let liquido = (sueldo + extras + d3 + d4) - iess - prestamos;
 
-            let aporteIess = (sueldoGanado + extras) * CONFIG.iessPorc;
-            let liquido = (sueldoGanado + extras + decimoTercero + decimoCuarto) - aporteIess - prestamos;
-
-            document.getElementById('viewBase').innerText = `$ ${sueldoGanado.toFixed(2)}`;
-            document.getElementById('viewTotalDecimos').innerText = `$ ${(decimoTercero + decimoCuarto).toFixed(2)}`;
-            document.getElementById('viewIess').innerText = `$ ${aporteIess.toFixed(2)}`;
+            // Render UI
+            document.getElementById('viewBase').innerText = `$ ${sueldo.toFixed(2)}`;
+            document.getElementById('viewTotalDecimos').innerText = `$ ${(d3 + d4).toFixed(2)}`;
+            document.getElementById('resumenDecimos').classList.toggle('hidden', !incluyeDecimos);
+            document.getElementById('viewIess').innerText = `$ ${iess.toFixed(2)}`;
             document.getElementById('viewPrestamos').innerText = `$ ${prestamos.toFixed(2)}`;
             document.getElementById('totalLiquido').innerText = `$ ${liquido.toFixed(2)}`;
 
-            return { sueldoGanado, extras, decimoTercero, decimoCuarto, aporteIess, prestamos, liquido };
+            return { sueldo, extras, d3, d4, iess, prestamos, liquido, dias };
         }
 
-        // --- 3. PROCESO MAESTRO (Generar QR -> Guardar -> PDF) ---
-        async function procesarRol() {
-            const val = calcularValores();
-            // 1. Datos para el QR (Resumen para verificación rápida)
-            const qrData = `VALIDO\nHash: ${hashActual}\nPago: $${val.liquido.toFixed(2)}\nEmp: ${CONFIG.trabajador.nombre.split(' ')[0]}\nFecha: ${document.getElementById('fechaEmision').value}`;
+        // --- CONEXIÓN CON GOOGLE SHEETS ---
+        
+        function loading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
+
+        function cargarHistorialCloud() {
+            if(API_URL.includes("Example")) return alert("¡Configura la URL de Google Apps Script!");
+            loading(true);
             
-            // 2. Generar imagen QR
-            document.getElementById('qr-code-container').innerHTML = '';
-            const qrCode = new QRCode(document.getElementById('qr-code-container'), {
-                text: qrData, width: 100, height: 100
-            });
-
-            // Esperar un momento a que el QR se renderice en el DOM
-            setTimeout(() => {
-                const canvas = document.querySelector('#qr-code-container canvas');
-                const qrImage = canvas.toDataURL("image/png");
-                
-                // 3. Guardar en BD
-                guardarEnHistorial(val);
-
-                // 4. Crear PDF con el QR
-                crearPDF(val, qrImage);
-                
-                // 5. Regenerar Hash para el próximo
-                generarHash();
-            }, 300);
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ accion: 'leer' })
+            })
+            .then(r => r.json())
+            .then(res => {
+                loading(false);
+                if(res.result === 'success') {
+                    dbCache = res.data.reverse(); // Guardamos en memoria local
+                    renderTabla(dbCache);
+                }
+            })
+            .catch(e => { loading(false); alert("Error de conexión"); });
         }
 
-        function crearPDF(val, qrImg) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const fInicio = document.getElementById('fechaInicio').value.split('-').reverse().join('/');
-            const fFin = document.getElementById('fechaFin').value.split('-').reverse().join('/');
-            const dias = document.getElementById('diasTrab').value;
-
-            // Encabezado
-            doc.setFontSize(16); doc.setFont("helvetica", "bold");
-            doc.text("ROL DE PAGOS CERTIFICADO", 105, 20, null, null, 'center');
-            doc.setFontSize(10); doc.setFont("helvetica", "normal");
-            doc.text(`CÓDIGO DE SEGURIDAD (HASH): ${hashActual}`, 105, 26, null, null, 'center');
-            doc.text(`PERÍODO: ${fInicio} AL ${fFin}`, 105, 32, null, null, 'center');
-
-            // Caja Datos
-            doc.setDrawColor(0); doc.setFillColor(245, 247, 250);
-            doc.rect(14, 38, 182, 35, 'F'); doc.rect(14, 38, 182, 35);
-
-            doc.setFontSize(9);
-            // Empleador
-            doc.setFont("helvetica", "bold"); doc.text("EMPLEADOR:", 18, 45);
-            doc.setFont("helvetica", "normal"); doc.text(CONFIG.empleador.nombre, 60, 45);
-            doc.setFont("helvetica", "bold"); doc.text("CI:", 18, 50);
-            doc.setFont("helvetica", "normal"); doc.text(CONFIG.empleador.ci, 60, 50);
-            // Trabajador
-            doc.setFont("helvetica", "bold"); doc.text("TRABAJADOR:", 18, 58);
-            doc.setFont("helvetica", "normal"); doc.text(CONFIG.trabajador.nombre, 60, 58);
-            doc.setFont("helvetica", "bold"); doc.text("CI:", 120, 58);
-            doc.setFont("helvetica", "normal"); doc.text(CONFIG.trabajador.ci, 130, 58);
-
-            // Tabla
-            let y = 80;
-            doc.setFillColor(30, 41, 59); 
-            doc.rect(14, y, 182, 8, 'F');
-            doc.setTextColor(255); doc.setFont("helvetica", "bold");
-            doc.text("CONCEPTO", 18, y+5);
-            doc.text("VALOR", 170, y+5, null, null, 'right');
-            
-            doc.setTextColor(0); doc.setFont("helvetica", "normal"); y += 14;
-
-            // Items
-            const addRow = (label, value) => {
-                doc.text(label, 18, y);
-                doc.text(value, 170, y, null, null, 'right');
-                y += 6;
-            };
-
-            addRow(`Sueldo Proporcional (${dias} días)`, val.sueldoGanado.toFixed(2));
-            if(val.extras > 0) addRow("Horas Extras (+)", val.extras.toFixed(2));
-            if(val.decimoTercero > 0) addRow("Décimos (+)", (val.decimoTercero + val.decimoCuarto).toFixed(2));
-            addRow("Aporte IESS 9.45% (-)", val.aporteIess.toFixed(2));
-            if(val.prestamos > 0) addRow("Préstamos (-)", val.prestamos.toFixed(2));
-
-            // Total
-            y += 4; doc.line(14, y, 196, y); y += 8;
-            doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-            doc.text("TOTAL A RECIBIR (EFECTIVO):", 18, y);
-            doc.text(`$ ${val.liquido.toFixed(2)}`, 170, y, null, null, 'right');
-
-            // QR Y FIRMAS
-            y += 15;
-            // Pegar Imagen QR
-            doc.addImage(qrImg, 'PNG', 160, y, 25, 25);
-            
-            doc.setFontSize(8); doc.setFont("helvetica", "normal");
-            doc.text("Escanee para verificar autenticidad", 160, y+28);
-
-            doc.setFontSize(9);
-            doc.text(`Fecha Emisión: ${document.getElementById('fechaEmision').value}`, 18, y+5);
-            doc.text(`Dirección: ${CONFIG.empleador.direccion}`, 18, y+10);
-
-            y += 20; 
-            doc.line(25, y+15, 85, y+15); doc.line(105, y+15, 165, y+15);
-            doc.text("EMPLEADOR", 40, y+20); doc.text("RECIBÍ CONFORME", 120, y+20);
-            
-            doc.save(`Rol_${hashActual}.pdf`);
-        }
-
-        // --- 4. BASE DE DATOS Y RESPALDOS (BACKUP) ---
-        function guardarEnHistorial(val) {
-            const registro = {
-                id: Date.now(),
+        function guardarEnCloud(datosRol) {
+            loading(true);
+            const payload = {
+                accion: 'guardar',
                 hash: hashActual,
-                periodo: `${document.getElementById('fechaInicio').value} al ${document.getElementById('fechaFin').value}`,
-                liquido: val.liquido.toFixed(2),
-                fecha: document.getElementById('fechaEmision').value
+                periodo: `${document.getElementById('fechaInicio').value} | ${document.getElementById('fechaFin').value}`,
+                liquido: datosRol.liquido.toFixed(2),
+                detalle: { // Guardamos el objeto completo para reimprimir
+                    ...datosRol,
+                    fechaEmision: document.getElementById('fechaEmision').value,
+                    fechas: { ini: document.getElementById('fechaInicio').value, fin: document.getElementById('fechaFin').value }
+                }
             };
-            let historial = JSON.parse(localStorage.getItem('nomina_secure_db')) || [];
-            historial.push(registro);
-            localStorage.setItem('nomina_secure_db', JSON.stringify(historial));
-            cargarHistorial();
+
+            fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) })
+            .then(r => r.json())
+            .then(res => {
+                loading(false);
+                if(res.result === 'success') {
+                    cargarHistorialCloud(); // Recargar tabla
+                    generarHash(); // Hash nuevo
+                }
+            });
         }
 
-        function cargarHistorial(filtro = "") {
-            let historial = JSON.parse(localStorage.getItem('nomina_secure_db')) || [];
+        function anularEnCloud(hash) {
+            if(!confirm("¿ANULAR este rol? No se borrará, pero quedará inválido.")) return;
+            loading(true);
+            fetch(API_URL, { method: 'POST', body: JSON.stringify({ accion: 'anular', hash: hash }) })
+            .then(r => r.json())
+            .then(res => {
+                loading(false);
+                cargarHistorialCloud(); // Recargar tabla para ver el cambio
+            });
+        }
+
+        // --- RENDERIZADO DE TABLA ---
+        function renderTabla(datos) {
             const tbody = document.getElementById('tablaHistorial');
             tbody.innerHTML = '';
             
-            // Ordenar por fecha reciente
-            historial.sort((a,b) => b.id - a.id);
-
-            // Filtrar
-            const filtrados = historial.filter(item => 
-                item.hash.toLowerCase().includes(filtro.toLowerCase()) || 
-                item.fecha.includes(filtro)
-            );
-
-            if(filtrados.length === 0) { document.getElementById('emptyMsg').style.display = 'block'; return; }
-            document.getElementById('emptyMsg').style.display = 'none';
-
-            filtrados.forEach(item => {
+            datos.forEach(item => {
+                const anulado = item.estado === 'ANULADO';
                 const tr = document.createElement('tr');
+                tr.className = `border-b ${anulado ? 'row-anulado' : 'hover:bg-gray-50'}`;
+                
+                // Parseamos el JSON guardado para tener datos listos para imprimir
+                const jsonData = typeof item.json_data === 'string' ? item.json_data : JSON.stringify(item.json_data);
+
                 tr.innerHTML = `
-                    <td class="p-3 border-b">
+                    <td class="p-3">
                         <div class="font-bold text-slate-700 text-xs">${item.periodo}</div>
-                        <div class="text-[10px] text-emerald-600 bg-emerald-100 inline-block px-1 rounded mt-1 font-mono">${item.hash}</div>
+                        <div class="text-[10px] font-mono mt-1 text-gray-500">${item.hash}</div>
                     </td>
-                    <td class="p-3 border-b font-bold text-slate-800">$${item.liquido}</td>
-                    <td class="p-3 border-b text-center">
-                        <button onclick="eliminarItem(${item.id})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                    <td class="p-3 text-right font-bold text-slate-800 text-sm">$${item.liquido}</td>
+                    <td class="p-3 text-center no-strike">
+                        <button onclick='prepararImpresion(${jsonData}, "${item.hash}", "${item.estado}")' class="text-blue-500 hover:text-blue-700 mx-1" title="PDF">
+                            <i class="fas fa-print"></i>
+                        </button>
+                        ${!anulado ? 
+                            `<button onclick="anularEnCloud('${item.hash}')" class="text-red-400 hover:text-red-600 mx-1" title="Anular">
+                                <i class="fas fa-ban"></i>
+                            </button>` : ''
+                        }
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // --- FUNCIONES DE RESPALDO (NEVER DELETE) ---
-        function descargarBackup() {
-            const data = localStorage.getItem('nomina_secure_db');
-            if(!data) return alert("No hay datos para respaldar");
-            const blob = new Blob([data], {type: "application/json"});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `RESPALDO_NOMINA_${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
+        function filtrarTabla() {
+            const txt = document.getElementById('buscador').value.toUpperCase();
+            const filtrados = dbCache.filter(x => x.hash.includes(txt) || x.periodo.includes(txt));
+            renderTabla(filtrados);
         }
 
-        function importarBackup(input) {
-            const file = input.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const json = JSON.parse(e.target.result);
-                    if(Array.isArray(json)) {
-                        localStorage.setItem('nomina_secure_db', JSON.stringify(json));
-                        cargarHistorial();
-                        alert("✅ Respaldo restaurado con éxito.");
-                    }
-                } catch(err) { alert("❌ Archivo inválido"); }
+        // --- GENERACIÓN DE PDF Y CÓDIGO DE BARRAS ---
+
+        async function procesarRol() {
+            const val = calcularValores();
+            if(val.dias <= 0) return alert("Revisa las fechas");
+            
+            // 1. Generar Código de Barras (Imagen)
+            await generarBarcodeImagen(hashActual);
+            const imgBarcode = document.querySelector("#barcode").outerHTML; // Esto es SVG, necesitamos convertirlo a DataURL si jsPDF no lo toma bien, pero usaremos canvg o similar si fuera complejo. Para simplificar, jsPDF + JsBarcode usa canvas.
+            
+            // Truco: JsBarcode genera SVG o Canvas. Usaremos Canvas para exportar imagen fácil
+            const canvas = document.createElement("canvas");
+            JsBarcode(canvas, hashActual, { format: "CODE128", displayValue: true, fontSize: 14, margin: 0 });
+            const barcodeDataUrl = canvas.toDataURL("image/png");
+
+            // 2. Guardar en Nube
+            guardarEnCloud(val);
+
+            // 3. Crear PDF
+            const datosPDF = {
+                ...val,
+                fechas: { ini: document.getElementById('fechaInicio').value, fin: document.getElementById('fechaFin').value },
+                fechaEmision: document.getElementById('fechaEmision').value
             };
-            reader.readAsText(file);
+            crearPDF(datosPDF, hashActual, barcodeDataUrl, 'ACTIVO');
         }
 
-        // Utilitarios
-        function filtrarHistorial() {
-            const texto = document.getElementById('buscadorHash').value;
-            cargarHistorial(texto);
+        async function prepararImpresion(jsonData, hash, estado) {
+            // Reconstituir imagen de codigo de barras
+            const canvas = document.createElement("canvas");
+            JsBarcode(canvas, hash, { format: "CODE128", displayValue: true });
+            const barcodeDataUrl = canvas.toDataURL("image/png");
+            
+            // Parsear datos si vienen en string
+            const datos = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+            crearPDF(datos, hash, barcodeDataUrl, estado);
         }
-        function eliminarItem(id) {
-            if(confirm("¿Eliminar registro?")) {
-                let historial = JSON.parse(localStorage.getItem('nomina_secure_db')) || [];
-                historial = historial.filter(item => item.id !== id);
-                localStorage.setItem('nomina_secure_db', JSON.stringify(historial));
-                cargarHistorial();
+
+        function crearPDF(val, hash, barcodeImg, estado) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // 1. FONDO DE SEGURIDAD (TRAMADO)
+            // Dibujamos puntitos grises muy tenues
+            doc.setFillColor(240, 240, 240);
+            for (let i=0; i<210; i+=5) {
+                for (let j=0; j<297; j+=5) {
+                    doc.circle(i, j, 0.2, 'F');
+                }
             }
-        }
-        function borrarHistorial() {
-             if(confirm("⚠ ¿ESTÁS SEGURO? Se borrará todo. Asegúrate de tener un respaldo.")) { 
-                localStorage.removeItem('nomina_secure_db'); 
-                cargarHistorial(); 
+
+            // 2. MARCA DE AGUA SI ES ANULADO
+            if (estado === 'ANULADO') {
+                doc.setTextColor(255, 200, 200);
+                doc.setFontSize(60);
+                doc.setFont("helvetica", "bold");
+                doc.text("A N U L A D O", 40, 150, { angle: 45 });
+                doc.setTextColor(0, 0, 0); // Reset
             }
+
+            // Encabezado
+            doc.setFontSize(16); doc.setFont("helvetica", "bold");
+            doc.text("ROL DE PAGOS CONFIDENCIAL", 105, 20, null, null, 'center');
+            doc.setFontSize(10); doc.setFont("helvetica", "normal");
+            doc.text(`Periodo: ${val.fechas.ini} al ${val.fechas.fin}`, 105, 26, null, null, 'center');
+
+            // Caja Datos
+            doc.setDrawColor(0); doc.setFillColor(255, 255, 255);
+            doc.rect(14, 35, 182, 35, 'FD'); // Filled White
+
+            doc.setFontSize(9);
+            // Empleador
+            doc.setFont("helvetica", "bold"); doc.text("EMPLEADOR:", 18, 42);
+            doc.setFont("helvetica", "normal"); doc.text(CONFIG.empleador.nombre, 60, 42);
+            doc.text(`CI: ${CONFIG.empleador.ci}`, 60, 47);
+            // Trabajador
+            doc.setFont("helvetica", "bold"); doc.text("TRABAJADORA:", 18, 55);
+            doc.setFont("helvetica", "normal"); doc.text(CONFIG.trabajador.nombre, 60, 55);
+            doc.text(`CI: ${CONFIG.trabajador.ci}`, 130, 55);
+
+            // Tabla Items
+            let y = 80;
+            doc.setFillColor(30, 41, 59); doc.rect(14, y, 182, 8, 'F'); // Header Azul
+            doc.setTextColor(255); doc.setFont("helvetica", "bold");
+            doc.text("CONCEPTO", 18, y+5);
+            doc.text("VALOR", 170, y+5, null, null, 'right');
+            doc.setTextColor(0); doc.setFont("helvetica", "normal"); y += 14;
+
+            const addRow = (l, v) => { doc.text(l, 18, y); doc.text(parseFloat(v).toFixed(2), 170, y, null, null, 'right'); y += 6; };
+            
+            addRow(`Sueldo (${val.dias} días)`, val.sueldo);
+            if(val.extras > 0) addRow("Horas Extras (+)", val.extras);
+            if((val.d3 + val.d4) > 0) addRow("Décimos Acum. (+)", val.d3+val.d4);
+            addRow("Aporte IESS 9.45% (-)", val.iess);
+            if(val.prestamos > 0) addRow("Préstamos (-)", val.prestamos);
+
+            // Total
+            y += 4; doc.line(14, y, 196, y); y += 8;
+            doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+            doc.text("TOTAL A RECIBIR:", 18, y);
+            doc.text(`$ ${parseFloat(val.liquido).toFixed(2)}`, 170, y, null, null, 'right');
+
+            // 3. INSERTAR CÓDIGO DE BARRAS (HASH)
+            y += 15;
+            // doc.addImage(formato, x, y, ancho, alto)
+            doc.addImage(barcodeImg, 'PNG', 70, y, 70, 15); 
+            
+            doc.setFontSize(8); doc.setFont("helvetica", "normal");
+            doc.text("Identificador Único (Hash) de Transacción", 105, y+20, null, null, 'center');
+            doc.text(`Fecha de Emisión: ${val.fechaEmision}`, 18, y+30);
+
+            // Firmas
+            y += 45; 
+            doc.line(25, y, 85, y); doc.line(105, y, 165, y);
+            doc.text("FIRMA EMPLEADOR", 40, y+5); doc.text("RECIBÍ CONFORME", 120, y+5);
+
+            doc.save(`${estado === 'ANULADO' ? 'ANULADO_' : 'Rol_'}${hash}.pdf`);
         }
-        function exportarExcel() {
-            let historial = JSON.parse(localStorage.getItem('nomina_secure_db')) || [];
-            if(historial.length === 0) return alert("Nada que exportar");
-            const ws = XLSX.utils.json_to_sheet(historial);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Pagos");
-            XLSX.writeFile(wb, "Reporte_Nomina.xlsx");
+
+        async function generarBarcodeImagen(texto) {
+            // Helper para asegurar que el canvas se actualice antes de usarse
+            return new Promise(resolve => {
+                const canvas = document.createElement("canvas");
+                JsBarcode(canvas, texto, { format: "CODE128" });
+                resolve(canvas.toDataURL("image/png"));
+            });
         }
+
     </script>
 </body>
 </html>
