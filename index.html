@@ -3,318 +3,440 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nómina Segura - Dylan Vélez</title>
+    <title>Nómina Doméstica Pro</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Elementos ocultos para generación */
-        #barcode-container { display: none; }
-        
-        /* PATRÓN DE SEGURIDAD (TRAMADO DE FONDO) */
-        .security-pattern {
-            background-color: #ffffff;
-            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+        /* Fondo de seguridad (puntitos) */
+        .security-bg {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
             background-size: 10px 10px;
         }
-
-        /* Estilos para estado Anulado */
-        .row-anulado { background-color: #fef2f2 !important; opacity: 0.8; }
-        .row-anulado td { text-decoration: line-through; color: #991b1b; }
-        .row-anulado .no-strike { text-decoration: none; }
-        
-        /* Animación de carga */
-        .loading-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(255,255,255,0.8); z-index: 50;
-            display: none; justify-content: center; align-items: center;
+        /* Spinner de carga */
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid #10b981;
+            border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;
         }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Estilos para filas anuladas */
+        .row-anulado { background-color: #fee2e2 !important; color: #991b1b; text-decoration: line-through; }
+        .row-anulado .no-strike { text-decoration: none; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 md:p-8 font-sans">
+<body class="bg-slate-100 min-h-screen p-4 font-sans text-slate-800">
 
-    <div id="loading" class="loading-overlay">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 z-50 hidden flex-col items-center justify-center">
+        <div class="loader mb-2"></div>
+        <p class="text-sm font-bold text-emerald-600">Procesando...</p>
     </div>
 
-    <nav class="bg-slate-800 text-white p-4 rounded-xl mb-6 flex justify-between items-center shadow-lg max-w-6xl mx-auto">
-        <h1 class="text-xl font-bold flex items-center gap-2">
-            <i class="fas fa-shield-alt text-emerald-400"></i>
-            <span>Sistema Nómina <span class="text-xs text-gray-400 font-normal">| Conectado a Drive</span></span>
+    <nav class="bg-slate-900 text-white p-4 rounded-xl shadow-lg max-w-6xl mx-auto mb-6 flex justify-between items-center">
+        <h1 class="font-bold text-lg flex items-center gap-2">
+            <i class="fas fa-file-invoice-dollar text-emerald-400"></i>
+            <span>Nómina <span class="text-emerald-400 font-light">SecureCloud</span></span>
         </h1>
-        <div class="space-x-2">
-            <button onclick="cargarHistorialCloud()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-xs font-bold transition shadow">
-                <i class="fas fa-sync mr-1"></i> Actualizar Datos
-            </button>
-        </div>
+        <button onclick="cargarHistorial()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded transition border border-slate-600">
+            <i class="fas fa-sync-alt mr-1"></i> Recargar Datos
+        </button>
     </nav>
 
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <div class="bg-white rounded-xl shadow-xl p-6 border-t-4 border-slate-600 security-pattern relative">
-            
-            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2 flex justify-between items-center bg-white/80 backdrop-blur-sm p-2 rounded">
-                <span>Generar Rol</span>
-                <span class="text-[10px] font-mono bg-slate-200 px-2 py-1 rounded text-slate-600 border border-slate-300" id="hashDisplay">HASH: ---</span>
-            </h2>
 
-            <div class="bg-slate-50 p-3 rounded-lg text-xs text-slate-700 mb-4 border border-slate-200 shadow-sm">
-                <p><strong>Empleador:</strong> DYLAN JOEL VELEZ VILLASAGUA</p>
-                <p><strong>Trabajadora:</strong> MONICA ALEXANDRA MATUTE IBARRA</p>
-                <p class="mt-1 text-[10px] text-gray-400">Cargo: EMPLEADA DOMÉSTICA</p>
+        <div class="bg-white rounded-xl shadow-xl border-t-4 border-slate-800 overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                <h2 class="font-bold text-slate-700">Nuevo Rol de Pagos</h2>
+                <span id="hashDisplay" class="text-[10px] font-mono bg-emerald-100 text-emerald-800 px-2 py-1 rounded border border-emerald-200">Generating...</span>
             </div>
 
-            <div class="space-y-4">
-                <div class="bg-blue-50 p-3 rounded border border-blue-100 relative">
-                    <p class="text-xs font-bold text-blue-800 mb-2 uppercase tracking-wide">Periodo Laboral</p>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600">Desde</label>
-                            <input type="date" id="fechaInicio" class="w-full border rounded p-1.5 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600">Hasta</label>
-                            <input type="date" id="fechaFin" class="w-full border rounded p-1.5 text-sm">
-                        </div>
-                    </div>
-                    <div class="mt-2 text-right">
-                        <span class="text-xs text-blue-700 font-bold bg-white px-2 py-1 rounded border border-blue-100">
-                            Días: <span id="labelDias">0</span>
+            <div class="p-6 space-y-4 relative security-bg">
+                <div class="text-xs bg-white/90 p-3 rounded border shadow-sm space-y-1">
+                    <p><strong>Empleador:</strong> <span id="lblEmpleador">DYLAN JOEL VELEZ VILLASAGUA</span></p>
+                    <p><strong>Trabajadora:</strong> <span id="lblTrabajador">MONICA ALEXANDRA MATUTE IBARRA</span></p>
+                </div>
+
+                <div class="bg-blue-50/90 p-3 rounded border border-blue-100">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-xs font-bold text-blue-800 uppercase">Período Laboral</span>
+                        <span class="text-xs bg-white px-2 py-0.5 rounded text-blue-600 border border-blue-200 font-bold">
+                            Días: <span id="lblDias">0</span>
                         </span>
-                        <input type="hidden" id="diasTrab">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="date" id="fechaIni" class="w-full text-xs border rounded p-1.5 focus:ring-2 focus:ring-blue-400 outline-none">
+                        <input type="date" id="fechaFin" class="w-full text-xs border rounded p-1.5 focus:ring-2 focus:ring-blue-400 outline-none">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-gray-700">Horas Extras ($)</label>
-                        <input type="number" id="extras" value="0.00" step="0.01" class="w-full border rounded p-1.5 text-sm">
+                        <label class="text-xs font-bold text-gray-600">Horas Extras ($)</label>
+                        <input type="number" id="valExtras" value="0.00" class="w-full text-sm border rounded p-2 focus:border-emerald-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-700">Préstamos ($)</label>
-                        <input type="number" id="prestamos" value="0.00" step="0.01" class="w-full border border-red-200 rounded p-1.5 text-sm text-red-600 bg-red-50">
+                        <label class="text-xs font-bold text-gray-600">Préstamos ($)</label>
+                        <input type="number" id="valPrestamos" value="0.00" class="w-full text-sm border border-red-200 bg-red-50 text-red-600 rounded p-2 outline-none">
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded border">
-                    <input type="checkbox" id="pagarDecimos" class="w-4 h-4 text-emerald-600 rounded">
-                    <label for="pagarDecimos" class="text-xs font-bold text-gray-700">Incluir Décimos</label>
+                <div class="flex items-center gap-2 bg-gray-50 p-2 rounded border">
+                    <input type="checkbox" id="checkDecimos" class="text-emerald-600 rounded focus:ring-emerald-500">
+                    <label for="checkDecimos" class="text-xs font-bold text-gray-700 cursor-pointer select-none">Incluir Décimos (Acumulados)</label>
                 </div>
-                
+
                 <div>
-                     <label class="block text-xs font-bold text-gray-500">Fecha de Firma</label>
-                     <input type="date" id="fechaEmision" class="w-full border rounded p-1.5 text-xs">
+                    <label class="text-xs font-bold text-gray-500">Fecha de Firma (Emisión)</label>
+                    <input type="date" id="fechaEmision" class="w-full text-xs border rounded p-1.5">
                 </div>
 
-                <div class="bg-slate-900 text-white p-4 rounded-lg shadow-md text-sm space-y-1">
-                    <div class="flex justify-between text-gray-400"><span>Sueldo Base:</span> <span id="viewBase" class="text-white">$0.00</span></div>
-                    <div id="resumenDecimos" class="hidden flex justify-between text-emerald-400"><span>+ Décimos:</span> <span id="viewTotalDecimos">$0.00</span></div>
-                    <div class="flex justify-between text-red-300"><span>- IESS (9.45%):</span> <span id="viewIess">$0.00</span></div>
-                    <div class="flex justify-between text-red-300"><span>- Préstamos:</span> <span id="viewPrestamos">$0.00</span></div>
-                    <div class="border-t border-slate-700 my-2"></div>
-                    <div class="flex justify-between items-center text-lg font-bold text-yellow-400">
-                        <span>A PAGAR:</span> <span id="totalLiquido">$0.00</span>
+                <div class="bg-slate-800 text-white p-4 rounded-lg shadow text-sm space-y-1">
+                    <div class="flex justify-between text-gray-400 text-xs"><span>Sueldo Base:</span> <span id="outSueldo">$0.00</span></div>
+                    <div id="rowDecimos" class="hidden flex justify-between text-emerald-400 text-xs"><span>+ Décimos:</span> <span id="outDecimos">$0.00</span></div>
+                    <div class="flex justify-between text-red-300 text-xs"><span>- IESS (9.45%):</span> <span id="outIess">$0.00</span></div>
+                    <div class="flex justify-between text-red-300 text-xs"><span>- Préstamos:</span> <span id="outPrestamos">$0.00</span></div>
+                    <div class="border-t border-slate-600 my-2"></div>
+                    <div class="flex justify-between font-bold text-lg text-yellow-400">
+                        <span>A RECIBIR:</span> <span id="outLiquido">$0.00</span>
                     </div>
                 </div>
 
-                <button onclick="procesarRol()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg shadow-lg transition text-sm font-bold flex justify-center items-center gap-2">
+                <button onclick="guardarYGenerar()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow-lg transition flex items-center justify-center gap-2">
                     <i class="fas fa-barcode"></i> Guardar y Generar PDF
                 </button>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-xl p-6 border-t-4 border-emerald-600 flex flex-col h-full">
-            <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center">
-                <i class="fas fa-database mr-2 text-emerald-600"></i>Historial Google Sheets
-            </h2>
-            
-            <div class="mb-2 relative">
-                <input type="text" id="buscador" placeholder="Buscar..." class="w-full border rounded p-2 text-sm pl-8" onkeyup="filtrarTabla()">
-                <i class="fas fa-search absolute left-2.5 top-2.5 text-gray-400"></i>
+        <div class="bg-white rounded-xl shadow-xl border-t-4 border-blue-600 flex flex-col h-[600px]">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="font-bold text-slate-700 flex items-center gap-2">
+                    <i class="fas fa-database text-blue-600"></i> Historial Cloud
+                </h2>
+                <input type="text" id="buscador" placeholder="Buscar..." class="text-xs border rounded px-2 py-1 w-32" onkeyup="filtrarTabla()">
             </div>
-            
-            <div class="overflow-auto flex-grow border rounded-lg bg-gray-50 h-96">
-                <table class="w-full text-xs text-left border-collapse">
-                    <thead class="bg-slate-200 text-slate-700 uppercase font-bold sticky top-0">
+
+            <div class="flex-1 overflow-auto bg-slate-50 p-2">
+                <table class="w-full text-xs text-left border-collapse bg-white shadow-sm rounded-lg overflow-hidden">
+                    <thead class="bg-slate-200 text-slate-700 font-bold uppercase sticky top-0">
                         <tr>
                             <th class="p-3">Periodo / Hash</th>
-                            <th class="p-3 text-right">Monto</th>
-                            <th class="p-3 text-center">Estado</th>
+                            <th class="p-3 text-right">Liquido</th>
+                            <th class="p-3 text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaHistorial" class="divide-y divide-gray-200 bg-white">
+                    <tbody id="tablaCuerpo" class="divide-y divide-gray-100">
                         </tbody>
                 </table>
+                <div id="emptyState" class="hidden text-center p-10 text-gray-400">
+                    <i class="fas fa-cloud-download-alt text-3xl mb-2"></i>
+                    <p>Cargando datos...</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="barcode-container">
-        <svg id="barcode"></svg>
-    </div>
+    <canvas id="barcodeCanvas" class="hidden"></canvas>
 
     <script>
         // ==========================================
-        //  CONFIGURACIÓN - PEGA TU URL DE APPS SCRIPT AQUÍ
+        // CONFIGURACIÓN (Pega tu URL Aquí)
         // ==========================================
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwZIcwaAYvjIdGcWBStTBfuNnFUJYlIKr9V87P0Yxt1top6t0RB01iTRPuJOgRY2_Rg/exec'; 
-        
-        // Configuración Fija
-        const CONFIG = {
+        const URL_APPS_SCRIPT = "TU_URL_DE_APPS_SCRIPT_QUE_TERMINA_EN_EXEC";
+
+        // Datos Constantes
+        const DATOS = {
             empleador: { nombre: "DYLAN JOEL VELEZ VILLASAGUA", ci: "0926413667" },
             trabajador: { nombre: "MONICA ALEXANDRA MATUTE IBARRA", ci: "0201600202" },
-            sueldoBaseFull: 264.38, sbu2025: 470.00, iessPorc: 0.0945
+            sueldoBase: 264.38,
+            sbu: 470.00
         };
 
         let hashActual = "";
-        let dbCache = []; // Almacenamos los datos aquí para no consultar a Google cada vez que buscamos
+        let dbLocal = []; // Cache para búsqueda rápida
 
-        window.onload = function() {
-            const t = new Date();
-            document.getElementById('fechaInicio').valueAsDate = new Date(t.getFullYear(), t.getMonth(), 1);
-            document.getElementById('fechaFin').valueAsDate = t;
-            document.getElementById('fechaEmision').valueAsDate = t;
-            generarHash();
-            calcularDiasAutomaticos();
-            cargarHistorialCloud(); // Carga inicial
+        // ==========================================
+        // INICIO
+        // ==========================================
+        window.onload = () => {
+            const hoy = new Date();
+            // Default: primer día del mes al día actual
+            document.getElementById('fechaIni').valueAsDate = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            document.getElementById('fechaFin').valueAsDate = hoy;
+            document.getElementById('fechaEmision').valueAsDate = hoy;
+            
+            generarNuevoHash();
+            calcular();
+            cargarHistorial(); // Cargar datos de la nube
         };
 
-        // --- LÓGICA DE CÁLCULO (IGUAL QUE ANTES) ---
-        function generarHash() {
-            const r = Math.random().toString(36).substring(2, 6).toUpperCase();
-            const m = (new Date().getMonth() + 1).toString().padStart(2,'0');
-            hashActual = `ROL-${m}-${r}`;
-            document.getElementById('hashDisplay').innerText = `HASH: ${hashActual}`;
+        // ==========================================
+        // LÓGICA DE CÁLCULO
+        // ==========================================
+        function generarNuevoHash() {
+            const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+            const mes = (new Date().getMonth() + 1).toString().padStart(2, '0');
+            hashActual = `ROL-${mes}-${rand}`;
+            document.getElementById('hashDisplay').innerText = hashActual;
         }
 
-        document.getElementById('fechaInicio').addEventListener('change', calcularDiasAutomaticos);
-        document.getElementById('fechaFin').addEventListener('change', calcularDiasAutomaticos);
-        ['extras', 'prestamos', 'pagarDecimos'].forEach(id => {
-            document.getElementById(id).addEventListener('input', calcularValores);
-        });
+        // Event Listeners
+        ['fechaIni', 'fechaFin'].forEach(id => document.getElementById(id).addEventListener('change', calcular));
+        ['valExtras', 'valPrestamos', 'checkDecimos'].forEach(id => document.getElementById(id).addEventListener('input', calcular));
 
-        function calcularDiasAutomaticos() {
-            const f1 = new Date(document.getElementById('fechaInicio').value);
-            const f2 = new Date(document.getElementById('fechaFin').value);
-            const diff = Math.ceil((f2 - f1) / (86400000)) + 1;
-            document.getElementById('diasTrab').value = diff > 0 ? diff : 0;
-            document.getElementById('labelDias').innerText = diff > 0 ? diff : 0;
-            calcularValores();
-        }
+        function calcular() {
+            // 1. Días
+            const d1 = new Date(document.getElementById('fechaIni').value);
+            const d2 = new Date(document.getElementById('fechaFin').value);
+            let dias = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+            if (dias < 0) dias = 0;
+            document.getElementById('lblDias').innerText = dias;
 
-        function calcularValores() {
-            const dias = parseInt(document.getElementById('diasTrab').value) || 0;
-            const extras = parseFloat(document.getElementById('extras').value) || 0;
-            const prestamos = parseFloat(document.getElementById('prestamos').value) || 0;
-            const incluyeDecimos = document.getElementById('pagarDecimos').checked;
+            // 2. Valores
+            const extras = parseFloat(document.getElementById('valExtras').value) || 0;
+            const prestamos = parseFloat(document.getElementById('valPrestamos').value) || 0;
+            const conDecimos = document.getElementById('checkDecimos').checked;
 
-            let sueldo = (CONFIG.sueldoBaseFull / 30) * dias;
-            let d3 = incluyeDecimos ? (sueldo + extras) / 12 : 0;
-            let d4 = incluyeDecimos ? (CONFIG.sbu2025 / 360) * dias : 0;
-            let iess = (sueldo + extras) * CONFIG.iessPorc;
-            let liquido = (sueldo + extras + d3 + d4) - iess - prestamos;
-
-            // Render UI
-            document.getElementById('viewBase').innerText = `$ ${sueldo.toFixed(2)}`;
-            document.getElementById('viewTotalDecimos').innerText = `$ ${(d3 + d4).toFixed(2)}`;
-            document.getElementById('resumenDecimos').classList.toggle('hidden', !incluyeDecimos);
-            document.getElementById('viewIess').innerText = `$ ${iess.toFixed(2)}`;
-            document.getElementById('viewPrestamos').innerText = `$ ${prestamos.toFixed(2)}`;
-            document.getElementById('totalLiquido').innerText = `$ ${liquido.toFixed(2)}`;
-
-            return { sueldo, extras, d3, d4, iess, prestamos, liquido, dias };
-        }
-
-        // --- CONEXIÓN CON GOOGLE SHEETS ---
-        
-        function loading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
-
-        function cargarHistorialCloud() {
-            if(API_URL.includes("Example")) return alert("¡Configura la URL de Google Apps Script!");
-            loading(true);
+            // Cálculos
+            const sueldoGanado = (DATOS.sueldoBase / 30) * dias;
+            let dec3 = 0, dec4 = 0;
             
-            fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ accion: 'leer' })
-            })
-            .then(r => r.json())
-            .then(res => {
-                loading(false);
-                if(res.result === 'success') {
-                    dbCache = res.data.reverse(); // Guardamos en memoria local
-                    renderTabla(dbCache);
-                }
-            })
-            .catch(e => { loading(false); alert("Error de conexión"); });
+            if (conDecimos) {
+                dec3 = (sueldoGanado + extras) / 12;
+                dec4 = (DATOS.sbu / 360) * dias;
+                document.getElementById('rowDecimos').classList.remove('hidden');
+            } else {
+                document.getElementById('rowDecimos').classList.add('hidden');
+            }
+
+            const iess = (sueldoGanado + extras) * 0.0945;
+            const liquido = (sueldoGanado + extras + dec3 + dec4) - iess - prestamos;
+
+            // Render
+            document.getElementById('outSueldo').innerText = `$${sueldoGanado.toFixed(2)}`;
+            document.getElementById('outDecimos').innerText = `$${(dec3 + dec4).toFixed(2)}`;
+            document.getElementById('outIess').innerText = `$${iess.toFixed(2)}`;
+            document.getElementById('outPrestamos').innerText = `$${prestamos.toFixed(2)}`;
+            document.getElementById('outLiquido').innerText = `$${liquido.toFixed(2)}`;
+
+            // Retornar objeto completo para guardar
+            return {
+                dias, sueldoGanado, extras, dec3, dec4, iess, prestamos, liquido,
+                periodoTxt: `${document.getElementById('fechaIni').value} al ${document.getElementById('fechaFin').value}`,
+                emision: document.getElementById('fechaEmision').value
+            };
         }
 
-        function guardarEnCloud(datosRol) {
-            loading(true);
-            const payload = {
-                accion: 'guardar',
-                hash: hashActual,
-                periodo: `${document.getElementById('fechaInicio').value} | ${document.getElementById('fechaFin').value}`,
-                liquido: datosRol.liquido.toFixed(2),
-                detalle: { // Guardamos el objeto completo para reimprimir
-                    ...datosRol,
-                    fechaEmision: document.getElementById('fechaEmision').value,
-                    fechas: { ini: document.getElementById('fechaInicio').value, fin: document.getElementById('fechaFin').value }
+        // ==========================================
+        // CONEXIÓN CON GOOGLE SHEETS
+        // ==========================================
+        async function cargarHistorial() {
+            setLoading(true);
+            try {
+                const res = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: JSON.stringify({ accion: 'leer' }) });
+                const json = await res.json();
+                if (json.result === 'success') {
+                    dbLocal = json.data;
+                    renderTabla(dbLocal);
                 }
+            } catch (e) { console.error(e); alert("Error cargando historial"); }
+            setLoading(false);
+        }
+
+        async function guardarYGenerar() {
+            if(URL_APPS_SCRIPT.includes("TU_URL")) return alert("¡Configura la URL del Script!");
+            
+            const calcs = calcular();
+            if (calcs.dias <= 0) return alert("Revisa las fechas");
+            
+            setLoading(true);
+
+            // 1. Preparar Payload (La Data Completa)
+            const payload = {
+                hash: hashActual,
+                periodo_txt: calcs.periodoTxt,
+                monto: calcs.liquido.toFixed(2),
+                detalle_completo: { ...calcs, ...DATOS } // Guardamos TODO
             };
 
-            fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) })
-            .then(r => r.json())
-            .then(res => {
-                loading(false);
-                if(res.result === 'success') {
-                    cargarHistorialCloud(); // Recargar tabla
-                    generarHash(); // Hash nuevo
+            try {
+                // 2. Enviar a Google Sheets
+                const res = await fetch(URL_APPS_SCRIPT, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ accion: 'guardar', payload: payload }) 
+                });
+                const json = await res.json();
+                
+                if (json.result === 'success') {
+                    // 3. Generar PDF
+                    generarPDF(payload.detalle_completo, hashActual, 'ACTIVO');
+                    // 4. Actualizar UI
+                    generarNuevoHash();
+                    cargarHistorial(); // Recarga la tabla
+                } else {
+                    alert("Error guardando: " + json.msg);
                 }
-            });
+            } catch (e) { alert("Error de conexión"); }
+            setLoading(false);
         }
 
-        function anularEnCloud(hash) {
-            if(!confirm("¿ANULAR este rol? No se borrará, pero quedará inválido.")) return;
-            loading(true);
-            fetch(API_URL, { method: 'POST', body: JSON.stringify({ accion: 'anular', hash: hash }) })
-            .then(r => r.json())
-            .then(res => {
-                loading(false);
-                cargarHistorialCloud(); // Recargar tabla para ver el cambio
-            });
+        async function anularRol(hash) {
+            if (!confirm("¿Seguro que quieres ANULAR este rol?")) return;
+            setLoading(true);
+            try {
+                const res = await fetch(URL_APPS_SCRIPT, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ accion: 'anular', hash: hash }) 
+                });
+                const json = await res.json();
+                if (json.result === 'success') {
+                    cargarHistorial();
+                } else {
+                    alert(json.msg);
+                }
+            } catch (e) { alert("Error anulando"); }
+            setLoading(false);
         }
 
-        // --- RENDERIZADO DE TABLA ---
+        // ==========================================
+        // GENERACIÓN DE PDF
+        // ==========================================
+        function generarPDF(data, hash, estado) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // 1. Fondo de Seguridad (Tramado)
+            doc.setFillColor(245, 245, 245);
+            for(let i=0; i<300; i+=10) {
+                for(let j=0; j<300; j+=10) {
+                    doc.circle(i, j, 0.5, 'F');
+                }
+            }
+
+            // 2. Marca de Agua ANULADO
+            if (estado === 'ANULADO') {
+                doc.setTextColor(255, 200, 200);
+                doc.setFontSize(60);
+                doc.setFont("helvetica", "bold");
+                doc.text("ANULADO", 50, 150, { angle: 45 });
+                doc.setTextColor(0,0,0); // Reset color
+            }
+
+            // 3. Encabezado
+            doc.setFontSize(16); doc.setFont("helvetica", "bold");
+            doc.text("ROL DE PAGOS - SERVICIO DOMÉSTICO", 105, 20, null, null, "center");
+            
+            doc.setFontSize(10); doc.setFont("helvetica", "normal");
+            doc.text(`CÓDIGO ÚNICO: ${hash}`, 105, 27, null, null, "center");
+            doc.text(`PERÍODO: ${data.periodoTxt}`, 105, 33, null, null, "center");
+
+            // 4. Datos Personales
+            doc.setDrawColor(0); doc.setFillColor(255, 255, 255);
+            doc.rect(15, 40, 180, 25, 'FD');
+            
+            doc.setFontSize(9);
+            doc.text(`EMPLEADOR: ${data.empleador.nombre}`, 20, 48);
+            doc.text(`CI: ${data.empleador.ci}`, 20, 53);
+            
+            doc.text(`TRABAJADORA: ${data.trabajador.nombre}`, 20, 60);
+            doc.text(`CI: ${data.trabajador.ci}`, 140, 60);
+
+            // 5. Tabla Detalles
+            let y = 75;
+            doc.setFillColor(30, 41, 59); // Slate 800
+            doc.rect(15, y, 180, 8, 'F');
+            doc.setTextColor(255); doc.setFont("helvetica", "bold");
+            doc.text("RUBRO", 20, y+5); doc.text("MONTO", 185, y+5, null, null, "right");
+            
+            y += 15; doc.setTextColor(0); doc.setFont("helvetica", "normal");
+            
+            const row = (label, val) => {
+                doc.text(label, 20, y);
+                doc.text(parseFloat(val).toFixed(2), 185, y, null, null, "right");
+                y += 7;
+            };
+
+            row(`Sueldo Proporcional (${data.dias} días)`, data.sueldoGanado);
+            if(data.extras > 0) row("Horas Extras (+)", data.extras);
+            if((data.dec3 + data.dec4) > 0) row("Décimos Acumulados (+)", data.dec3 + data.dec4);
+            row("Aporte IESS 9.45% (-)", data.iess);
+            if(data.prestamos > 0) row("Préstamos (-)", data.prestamos);
+
+            // Total
+            y += 5; doc.setLineWidth(0.5); doc.line(15, y, 195, y); y += 10;
+            doc.setFontSize(12); doc.setFont("helvetica", "bold");
+            doc.text("LÍQUIDO A RECIBIR:", 20, y);
+            doc.text(`$ ${parseFloat(data.liquido).toFixed(2)}`, 185, y, null, null, "right");
+
+            // 6. CÓDIGO DE BARRAS (GENERADO AL VUELO)
+            const canvas = document.createElement("canvas");
+            JsBarcode(canvas, hash, { format: "CODE128", displayValue: false });
+            const barcodeImg = canvas.toDataURL("image/jpeg");
+            
+            y += 20;
+            doc.addImage(barcodeImg, 'JPEG', 70, y, 70, 15);
+            doc.setFontSize(8); doc.setFont("helvetica", "normal");
+            doc.text("Firma Digital del Documento", 105, y+20, null, null, "center");
+            doc.text(`Emisión: ${data.emision}`, 105, y+25, null, null, "center");
+
+            // 7. Firmas
+            y += 40;
+            doc.line(30, y, 80, y); doc.line(130, y, 180, y);
+            doc.text("EMPLEADOR", 55, y+5, null, null, "center");
+            doc.text("RECIBÍ CONFORME", 155, y+5, null, null, "center");
+
+            doc.save(`Rol_${hash}.pdf`);
+        }
+
+        // ==========================================
+        // UTILIDADES UI
+        // ==========================================
+        function setLoading(state) {
+            document.getElementById('loadingOverlay').style.display = state ? 'flex' : 'none';
+        }
+
         function renderTabla(datos) {
-            const tbody = document.getElementById('tablaHistorial');
+            const tbody = document.getElementById('tablaCuerpo');
             tbody.innerHTML = '';
             
+            if(datos.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('emptyState').classList.add('hidden');
+
             datos.forEach(item => {
-                const anulado = item.estado === 'ANULADO';
                 const tr = document.createElement('tr');
-                tr.className = `border-b ${anulado ? 'row-anulado' : 'hover:bg-gray-50'}`;
+                const esAnulado = item.estado === 'ANULADO';
+                tr.className = `border-b hover:bg-slate-50 transition ${esAnulado ? 'row-anulado' : ''}`;
                 
-                // Parseamos el JSON guardado para tener datos listos para imprimir
-                const jsonData = typeof item.json_data === 'string' ? item.json_data : JSON.stringify(item.json_data);
+                // Preparamos el JSON para pasarlo a la función de imprimir
+                // Nota: item.json viene de Apps Script como string, hay que parsearlo
+                let dataObj = null;
+                try { dataObj = JSON.parse(item.json); } catch(e) { dataObj = {}; }
+                
+                // Importante: Escapamos comillas para el HTML inline onclick
+                const dataStr = JSON.stringify(dataObj).replace(/"/g, '&quot;');
 
                 tr.innerHTML = `
                     <td class="p-3">
                         <div class="font-bold text-slate-700 text-xs">${item.periodo}</div>
-                        <div class="text-[10px] font-mono mt-1 text-gray-500">${item.hash}</div>
+                        <div class="font-mono text-[10px] text-slate-500 mt-1 flex items-center gap-2">
+                            <span>${item.hash}</span>
+                            ${esAnulado ? '<span class="text-red-600 font-bold px-1 border border-red-200 rounded no-strike">ANULADO</span>' : ''}
+                        </div>
                     </td>
-                    <td class="p-3 text-right font-bold text-slate-800 text-sm">$${item.liquido}</td>
+                    <td class="p-3 text-right font-bold text-slate-800">$${item.liquido}</td>
                     <td class="p-3 text-center no-strike">
-                        <button onclick='prepararImpresion(${jsonData}, "${item.hash}", "${item.estado}")' class="text-blue-500 hover:text-blue-700 mx-1" title="PDF">
-                            <i class="fas fa-print"></i>
+                        <button onclick="generarPDF(${dataStr}, '${item.hash}', '${item.estado}')" class="text-blue-500 hover:text-blue-700 mx-1" title="Descargar PDF">
+                            <i class="fas fa-file-pdf"></i>
                         </button>
-                        ${!anulado ? 
-                            `<button onclick="anularEnCloud('${item.hash}')" class="text-red-400 hover:text-red-600 mx-1" title="Anular">
-                                <i class="fas fa-ban"></i>
-                            </button>` : ''
-                        }
+                        ${!esAnulado ? 
+                        `<button onclick="anularRol('${item.hash}')" class="text-red-400 hover:text-red-600 mx-1" title="Anular">
+                            <i class="fas fa-ban"></i>
+                        </button>` : ''}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -322,139 +444,10 @@
         }
 
         function filtrarTabla() {
-            const txt = document.getElementById('buscador').value.toUpperCase();
-            const filtrados = dbCache.filter(x => x.hash.includes(txt) || x.periodo.includes(txt));
+            const term = document.getElementById('buscador').value.toLowerCase();
+            const filtrados = dbLocal.filter(x => x.hash.toLowerCase().includes(term) || x.periodo.toLowerCase().includes(term));
             renderTabla(filtrados);
         }
-
-        // --- GENERACIÓN DE PDF Y CÓDIGO DE BARRAS ---
-
-        async function procesarRol() {
-            const val = calcularValores();
-            if(val.dias <= 0) return alert("Revisa las fechas");
-            
-            // 1. Generar Código de Barras (Imagen)
-            await generarBarcodeImagen(hashActual);
-            const imgBarcode = document.querySelector("#barcode").outerHTML; // Esto es SVG, necesitamos convertirlo a DataURL si jsPDF no lo toma bien, pero usaremos canvg o similar si fuera complejo. Para simplificar, jsPDF + JsBarcode usa canvas.
-            
-            // Truco: JsBarcode genera SVG o Canvas. Usaremos Canvas para exportar imagen fácil
-            const canvas = document.createElement("canvas");
-            JsBarcode(canvas, hashActual, { format: "CODE128", displayValue: true, fontSize: 14, margin: 0 });
-            const barcodeDataUrl = canvas.toDataURL("image/png");
-
-            // 2. Guardar en Nube
-            guardarEnCloud(val);
-
-            // 3. Crear PDF
-            const datosPDF = {
-                ...val,
-                fechas: { ini: document.getElementById('fechaInicio').value, fin: document.getElementById('fechaFin').value },
-                fechaEmision: document.getElementById('fechaEmision').value
-            };
-            crearPDF(datosPDF, hashActual, barcodeDataUrl, 'ACTIVO');
-        }
-
-        async function prepararImpresion(jsonData, hash, estado) {
-            // Reconstituir imagen de codigo de barras
-            const canvas = document.createElement("canvas");
-            JsBarcode(canvas, hash, { format: "CODE128", displayValue: true });
-            const barcodeDataUrl = canvas.toDataURL("image/png");
-            
-            // Parsear datos si vienen en string
-            const datos = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
-            crearPDF(datos, hash, barcodeDataUrl, estado);
-        }
-
-        function crearPDF(val, hash, barcodeImg, estado) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            // 1. FONDO DE SEGURIDAD (TRAMADO)
-            // Dibujamos puntitos grises muy tenues
-            doc.setFillColor(240, 240, 240);
-            for (let i=0; i<210; i+=5) {
-                for (let j=0; j<297; j+=5) {
-                    doc.circle(i, j, 0.2, 'F');
-                }
-            }
-
-            // 2. MARCA DE AGUA SI ES ANULADO
-            if (estado === 'ANULADO') {
-                doc.setTextColor(255, 200, 200);
-                doc.setFontSize(60);
-                doc.setFont("helvetica", "bold");
-                doc.text("A N U L A D O", 40, 150, { angle: 45 });
-                doc.setTextColor(0, 0, 0); // Reset
-            }
-
-            // Encabezado
-            doc.setFontSize(16); doc.setFont("helvetica", "bold");
-            doc.text("ROL DE PAGOS CONFIDENCIAL", 105, 20, null, null, 'center');
-            doc.setFontSize(10); doc.setFont("helvetica", "normal");
-            doc.text(`Periodo: ${val.fechas.ini} al ${val.fechas.fin}`, 105, 26, null, null, 'center');
-
-            // Caja Datos
-            doc.setDrawColor(0); doc.setFillColor(255, 255, 255);
-            doc.rect(14, 35, 182, 35, 'FD'); // Filled White
-
-            doc.setFontSize(9);
-            // Empleador
-            doc.setFont("helvetica", "bold"); doc.text("EMPLEADOR:", 18, 42);
-            doc.setFont("helvetica", "normal"); doc.text(CONFIG.empleador.nombre, 60, 42);
-            doc.text(`CI: ${CONFIG.empleador.ci}`, 60, 47);
-            // Trabajador
-            doc.setFont("helvetica", "bold"); doc.text("TRABAJADORA:", 18, 55);
-            doc.setFont("helvetica", "normal"); doc.text(CONFIG.trabajador.nombre, 60, 55);
-            doc.text(`CI: ${CONFIG.trabajador.ci}`, 130, 55);
-
-            // Tabla Items
-            let y = 80;
-            doc.setFillColor(30, 41, 59); doc.rect(14, y, 182, 8, 'F'); // Header Azul
-            doc.setTextColor(255); doc.setFont("helvetica", "bold");
-            doc.text("CONCEPTO", 18, y+5);
-            doc.text("VALOR", 170, y+5, null, null, 'right');
-            doc.setTextColor(0); doc.setFont("helvetica", "normal"); y += 14;
-
-            const addRow = (l, v) => { doc.text(l, 18, y); doc.text(parseFloat(v).toFixed(2), 170, y, null, null, 'right'); y += 6; };
-            
-            addRow(`Sueldo (${val.dias} días)`, val.sueldo);
-            if(val.extras > 0) addRow("Horas Extras (+)", val.extras);
-            if((val.d3 + val.d4) > 0) addRow("Décimos Acum. (+)", val.d3+val.d4);
-            addRow("Aporte IESS 9.45% (-)", val.iess);
-            if(val.prestamos > 0) addRow("Préstamos (-)", val.prestamos);
-
-            // Total
-            y += 4; doc.line(14, y, 196, y); y += 8;
-            doc.setFont("helvetica", "bold"); doc.setFontSize(12);
-            doc.text("TOTAL A RECIBIR:", 18, y);
-            doc.text(`$ ${parseFloat(val.liquido).toFixed(2)}`, 170, y, null, null, 'right');
-
-            // 3. INSERTAR CÓDIGO DE BARRAS (HASH)
-            y += 15;
-            // doc.addImage(formato, x, y, ancho, alto)
-            doc.addImage(barcodeImg, 'PNG', 70, y, 70, 15); 
-            
-            doc.setFontSize(8); doc.setFont("helvetica", "normal");
-            doc.text("Identificador Único (Hash) de Transacción", 105, y+20, null, null, 'center');
-            doc.text(`Fecha de Emisión: ${val.fechaEmision}`, 18, y+30);
-
-            // Firmas
-            y += 45; 
-            doc.line(25, y, 85, y); doc.line(105, y, 165, y);
-            doc.text("FIRMA EMPLEADOR", 40, y+5); doc.text("RECIBÍ CONFORME", 120, y+5);
-
-            doc.save(`${estado === 'ANULADO' ? 'ANULADO_' : 'Rol_'}${hash}.pdf`);
-        }
-
-        async function generarBarcodeImagen(texto) {
-            // Helper para asegurar que el canvas se actualice antes de usarse
-            return new Promise(resolve => {
-                const canvas = document.createElement("canvas");
-                JsBarcode(canvas, texto, { format: "CODE128" });
-                resolve(canvas.toDataURL("image/png"));
-            });
-        }
-
     </script>
 </body>
 </html>
