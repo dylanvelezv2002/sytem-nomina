@@ -3,543 +3,443 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rol de Pagos - Servicio Doméstico</title>
+    <title>Nómina Segura - Dylan Vélez</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        /* --- ESTILOS BASE (Para imprimir y ver) --- */
-        body {
-            font-family: 'Times New Roman', Times, serif; /* Tipografía legal clásica */
-            background-color: #555;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* Formulario de llenado (Solo visible en pantalla) */
-        .editor-container {
-            background: #fff;
-            width: 210mm;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            font-family: Arial, sans-serif; /* Arial para el editor es más fácil de leer */
-        }
-        
-        .editor-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-        }
-
-        .editor-section {
-            grid-column: span 3;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #444;
-        }
-
-        .input-group { display: flex; flex-direction: column; }
-        .input-group label { font-size: 12px; font-weight: bold; color: #666; margin-bottom: 3px; }
-        .input-group input { padding: 5px; border: 1px solid #ccc; border-radius: 3px; }
-
-        .toolbar {
-            grid-column: span 3;
-            text-align: right;
-            margin-top: 15px;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
-        }
-
-        button {
-            padding: 10px 20px; cursor: pointer; font-weight: bold;
-            border: 1px solid #333; background: #fff; text-transform: uppercase;
-        }
-        button:hover { background: #eee; }
-        .btn-save { background: #000; color: #fff; border: 1px solid #000; }
-        .btn-anular { background: #8b0000; color: #fff; border: 1px solid #8b0000; }
-
-        /* --- LA HOJA DE PAPEL (El Recibo) --- */
-        .hoja-recibo {
-            background: #fff;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 20mm;
-            box-sizing: border-box;
-            position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            
-            /* Trama de seguridad sutil */
-            background-image: repeating-linear-gradient(
-                45deg,
-                #f9f9f9,
-                #f9f9f9 1px,
-                #fff 1px,
-                #fff 4px
-            );
-            border: 1px solid #ccc;
-        }
-
-        /* Marca de Agua ANULADO */
-        .sello-anulado {
-            display: none;
-            position: absolute;
-            top: 40%; left: 50%;
-            transform: translate(-50%, -50%) rotate(-30deg);
-            font-size: 100px;
-            color: rgba(200, 0, 0, 0.4);
-            border: 10px solid rgba(200, 0, 0, 0.4);
-            padding: 20px;
-            font-weight: bold;
-            z-index: 99;
-            pointer-events: none;
-            text-transform: uppercase;
-        }
-        .hoja-recibo.anulado .sello-anulado { display: block; }
-        
-        /* Estructura del Recibo */
-        h1 { text-align: center; font-size: 18pt; text-transform: uppercase; text-decoration: underline; margin-bottom: 30px; }
-        
-        .caja-datos {
-            border: 1px solid #000;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .fila-datos { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .label { font-weight: bold; width: 140px; }
-        .valor { border-bottom: 1px dotted #999; flex: 1; margin-left: 10px; }
-
-        .tabla-valores {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            margin-bottom: 30px;
-        }
-        .tabla-valores th, .tabla-valores td {
-            border: 1px solid #000;
-            padding: 8px;
-        }
-        .tabla-valores th { background-color: #eee; text-align: center; font-size: 11pt; }
-        .derecha { text-align: right; }
-        .centro { text-align: center; }
-
-        .seccion-firmas {
-            margin-top: 80px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .firma-box {
-            width: 40%;
-            border-top: 1px solid #000;
-            text-align: center;
-            padding-top: 5px;
-            font-size: 11pt;
-        }
-
-        .pie-legal {
-            margin-top: 50px;
-            font-size: 8pt;
-            text-align: justify;
-            color: #666;
-        }
-
-        .hash-seguridad {
-            position: absolute; bottom: 10mm; right: 20mm;
-            font-family: 'Courier New', monospace; font-size: 9pt;
-        }
-
-        /* --- MODO IMPRESIÓN --- */
-        @media print {
-            body { background: none; margin: 0; padding: 0; }
-            .editor-container, .no-print { display: none !important; }
-            .hoja-recibo { box-shadow: none; margin: 0; width: 100%; border: none; }
-        }
+        /* Ocultar el contenedor del QR en pantalla (solo sirve para generar la imagen) */
+        #qr-code-container { display: none; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 min-h-screen p-4 md:p-8 font-sans">
 
-    <div class="editor-container no-print">
-        <h3 style="margin-top:0;">📝 Editar Datos del Rol</h3>
-        <div class="editor-grid">
+    <nav class="bg-slate-800 text-white p-4 rounded-xl mb-6 flex justify-between items-center shadow-lg max-w-6xl mx-auto">
+        <h1 class="text-xl font-bold"><i class="fas fa-shield-alt mr-2 text-emerald-400"></i>Sistema de Nómina Seguro</h1>
+        <div class="space-x-2">
+            <button onclick="descargarBackup()" class="bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-xs font-bold transition">
+                <i class="fas fa-download mr-1"></i> Respaldo
+            </button>
+            <label for="importFile" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-xs font-bold transition cursor-pointer">
+                <i class="fas fa-upload mr-1"></i> Restaurar
+            </label>
+            <input type="file" id="importFile" class="hidden" onchange="importarBackup(this)">
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <div class="bg-white rounded-xl shadow-xl p-6 border-t-4 border-slate-600">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2 flex justify-between">
+                <span>Generar Nuevo Rol</span>
+                <span class="text-xs bg-slate-200 px-2 py-1 rounded text-slate-600" id="hashDisplay">HASH: ---</span>
+            </h2>
+
+            <div class="bg-slate-50 p-3 rounded-lg text-xs text-slate-700 mb-4 border border-slate-200">
+                <p><strong>Empleador:</strong> DYLAN JOEL VELEZ VILLASAGUA</p>
+                <p><strong>Trabajador:</strong> MONICA ALEXANDRA MATUTE IBARRA</p>
+                <p class="mt-1 text-[10px] text-gray-400">Pago en EFECTIVO | Sistema con Validación Hash</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-yellow-50 p-3 rounded border border-yellow-200 relative">
+                    <p class="text-xs font-bold text-gray-600 mb-2 uppercase">Período</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700">Desde</label>
+                            <input type="date" id="fechaInicio" class="w-full border rounded p-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700">Hasta</label>
+                            <input type="date" id="fechaFin" class="w-full border rounded p-2 text-sm">
+                        </div>
+                    </div>
+                    <div class="mt-2 flex justify-between items-center">
+                        <span class="text-xs text-gray-500">Días calculados: <strong id="labelDias" class="text-blue-600">0</strong></span>
+                        <input type="hidden" id="diasTrab">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700">Horas Extras ($)</label>
+                        <input type="number" id="extras" value="0.00" step="0.01" class="w-full border rounded p-2 text-sm focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700">Préstamos ($)</label>
+                        <input type="number" id="prestamos" value="0.00" step="0.01" class="w-full border rounded p-2 text-sm text-red-600">
+                    </div>
+                </div>
+
+                <div class="border p-2 rounded bg-slate-50">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="pagarDecimos" class="w-4 h-4 text-blue-600">
+                        <span class="text-xs font-bold text-gray-700">Incluir Décimos</span>
+                    </label>
+                </div>
+                
+                <div>
+                     <label class="block text-xs font-bold text-gray-500">Fecha de Firma</label>
+                     <input type="date" id="fechaEmision" class="w-full border rounded p-1 text-xs">
+                </div>
+
+                <div class="bg-slate-800 text-white p-4 rounded-lg shadow-inner text-sm">
+                    <div class="flex justify-between"><span>Sueldo Base:</span> <span id="viewBase">$0.00</span></div>
+                    <div id="resumenDecimos" class="hidden text-green-400 flex justify-between"><span>+ Décimos:</span> <span id="viewTotalDecimos">$0.00</span></div>
+                    <div class="flex justify-between text-red-300"><span>- IESS (9.45%):</span> <span id="viewIess">$0.00</span></div>
+                    <div class="flex justify-between text-red-300"><span>- Préstamos:</span> <span id="viewPrestamos">$0.00</span></div>
+                    <div class="border-t border-slate-600 my-2"></div>
+                    <div class="flex justify-between text-xl font-bold text-yellow-400">
+                        <span>A PAGAR:</span> <span id="totalLiquido">$0.00</span>
+                    </div>
+                </div>
+
+                <button onclick="procesarRol()" class="w-full bg-slate-900 hover:bg-black text-white py-3 rounded-lg shadow-lg transition text-sm font-bold flex justify-center items-center">
+                    <i class="fas fa-qrcode mr-2"></i> Generar, Guardar y Descargar PDF
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-xl p-6 border-t-4 border-emerald-600 flex flex-col h-full">
             
-            <div class="editor-section">DATOS DEL EMPLEADOR</div>
-            <div class="input-group">
-                <label>Nombre Empleador</label>
-                <input type="text" id="inEmpleador" placeholder="Nombre Apellido" oninput="actualizar()">
-            </div>
-            <div class="input-group">
-                <label>C.I. / RUC Empleador</label>
-                <input type="text" id="inRucEmpleador" placeholder="17..." oninput="actualizar()">
-            </div>
-
-            <div class="editor-section">DATOS DE LA TRABAJADORA</div>
-            <div class="input-group">
-                <label>Nombre Trabajadora</label>
-                <input type="text" id="inTrabajador" placeholder="Nombre Apellido" oninput="actualizar()">
-            </div>
-            <div class="input-group">
-                <label>Cédula Trabajadora</label>
-                <input type="text" id="inCedulaTrabajador" oninput="actualizar()">
-            </div>
-            <div class="input-group">
-                <label>Cargo / Función</label>
-                <input type="text" id="inCargo" value="ASISTENTE DEL HOGAR" oninput="actualizar()">
-            </div>
-
-            <div class="editor-section">PERÍODO Y VALORES</div>
-            <div class="input-group">
-                <label>Fecha Desde</label>
-                <input type="date" id="inDesde" oninput="actualizar()">
-            </div>
-            <div class="input-group">
-                <label>Fecha Hasta</label>
-                <input type="date" id="inHasta" oninput="actualizar()">
-            </div>
-            <div class="input-group">
-                <label>Días Trabajados</label>
-                <input type="number" id="inDias" value="30" oninput="actualizar()">
+            <div class="mb-4">
+                <h2 class="text-lg font-bold text-gray-800 mb-2"><i class="fas fa-database mr-2"></i>Base de Datos</h2>
+                <div class="relative">
+                    <input type="text" id="buscadorHash" placeholder="Buscar por HASH o Fecha..." class="w-full border border-gray-300 rounded-lg pl-10 p-2 text-sm shadow-sm" onkeyup="filtrarHistorial()">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
             </div>
             
-            <div class="input-group">
-                <label>Sueldo Mensual ($)</label>
-                <input type="number" id="inSueldo" value="460.00" oninput="actualizar()">
+            <div class="overflow-auto flex-grow border rounded-lg">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-slate-100 text-slate-600 uppercase sticky top-0">
+                        <tr>
+                            <th class="p-3">Período / Hash</th>
+                            <th class="p-3">Monto</th>
+                            <th class="p-3 text-center">Opción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaHistorial" class="divide-y divide-gray-100"></tbody>
+                </table>
+                <p id="emptyMsg" class="text-center text-gray-400 mt-10 text-sm">No hay registros.</p>
             </div>
-            <div class="input-group">
-                <label>Horas Extras ($)</label>
-                <input type="number" id="inExtras" value="0.00" oninput="actualizar()">
-            </div>
-            <div class="input-group">
-                <label>Transporte / Otros ($)</label>
-                <input type="number" id="inOtrosIng" value="0.00" oninput="actualizar()">
-            </div>
-            <div class="input-group">
-                <label>Aporte IESS 9.45% ($)</label>
-                <input type="number" id="inIess" value="0.00" oninput="actualizar()">
-            </div>
-            <div class="input-group">
-                <label>Anticipos / Préstamos ($)</label>
-                <input type="number" id="inAnticipos" value="0.00" oninput="actualizar()">
-            </div>
-            <div class="input-group">
-                <label>ID Documento</label>
-                <input type="text" id="inIdDoc" placeholder="Ej: ROL-DIC-2025" oninput="actualizar()">
-            </div>
-
-            <div class="toolbar">
-                <span id="msgEstado" style="float: left; color: blue; font-weight: bold; padding-top: 10px;"></span>
-                <button onclick="buscarRol()">🔍 Buscar</button>
-                <button class="btn-save" id="btnGuardar" onclick="guardarRol()">💾 Guardar Oficial</button>
-                <button class="btn-anular" id="btnAnular" onclick="anularRol()" style="display:none;">🚫 Anular Documento</button>
-                <button onclick="window.print()">🖨️ Imprimir</button>
+            
+            <div class="mt-4 grid grid-cols-2 gap-2">
+                <button onclick="exportarExcel()" class="bg-green-600 hover:bg-green-700 text-white py-2 rounded text-xs font-bold">
+                    <i class="fas fa-file-excel mr-1"></i> Reporte Excel
+                </button>
+                <button onclick="borrarHistorial()" class="text-red-400 hover:text-red-600 text-xs underline">
+                    Borrar Todo
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="hojaPapel" class="hoja-recibo">
-        <div class="sello-anulado">ANULADO</div>
-        
-        <h1>ROL DE PAGOS - SERVICIO DOMÉSTICO</h1>
-        
-        <p style="text-align: right; margin-bottom: 20px;">
-            <strong>N° Documento:</strong> <span id="outIdDoc">---</span>
-        </p>
-
-        <div class="caja-datos">
-            <div class="fila-datos">
-                <span class="label">EMPLEADOR:</span>
-                <span class="valor" id="outEmpleador"></span>
-            </div>
-            <div class="fila-datos">
-                <span class="label">RUC / C.I.:</span>
-                <span class="valor" id="outRucEmpleador"></span>
-            </div>
-        </div>
-
-        <div class="caja-datos">
-            <div class="fila-datos">
-                <span class="label">TRABAJADORA:</span>
-                <span class="valor" id="outTrabajador"></span>
-            </div>
-            <div class="fila-datos">
-                <span class="label">CÉDULA:</span>
-                <span class="valor" id="outCedulaTrabajador"></span>
-            </div>
-            <div class="fila-datos">
-                <span class="label">CARGO:</span>
-                <span class="valor" id="outCargo"></span>
-            </div>
-            <div class="fila-datos">
-                <span class="label">PERÍODO:</span>
-                <span class="valor">
-                    Del <span id="outDesde">--/--/--</span> 
-                    al <span id="outHasta">--/--/--</span>
-                </span>
-            </div>
-            <div class="fila-datos">
-                <span class="label">DÍAS LABORADOS:</span>
-                <span class="valor" id="outDias"></span>
-            </div>
-        </div>
-
-        <table class="tabla-valores">
-            <thead>
-                <tr>
-                    <th>CONCEPTO</th>
-                    <th>INGRESOS (+)</th>
-                    <th>DESCUENTOS (-)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Sueldo Mensual Unificado</td>
-                    <td class="derecha" id="outSueldo">0.00</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Horas Suplementarias / Extraordinarias</td>
-                    <td class="derecha" id="outExtras">0.00</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Bonificación Transporte / Otros</td>
-                    <td class="derecha" id="outOtrosIng">0.00</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Aporte Personal IESS (9.45%)</td>
-                    <td></td>
-                    <td class="derecha" id="outIess">0.00</td>
-                </tr>
-                <tr>
-                    <td>Anticipos de Sueldo / Préstamos</td>
-                    <td></td>
-                    <td class="derecha" id="outAnticipos">0.00</td>
-                </tr>
-                <tr style="font-weight: bold; background: #f0f0f0;">
-                    <td class="derecha">SUBTOTALES:</td>
-                    <td class="derecha" id="subIngresos">0.00</td>
-                    <td class="derecha" id="subEgresos">0.00</td>
-                </tr>
-                <tr style="font-weight: bold; font-size: 14pt; border-top: 2px solid #000;">
-                    <td class="derecha">LÍQUIDO A RECIBIR:</td>
-                    <td colspan="2" class="centro" id="outLiquido">$ 0.00</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="seccion-firmas">
-            <div class="firma-box">
-                <br><br><br>
-                <span id="firmaEmpleador">F. Empleador</span><br>
-                <strong>EMPLEADOR</strong>
-            </div>
-            <div class="firma-box">
-                <br><br><br>
-                <span id="firmaTrabajador">F. Trabajadora</span><br>
-                <strong>RECIBÍ CONFORME</strong><br>
-                C.I.: <span id="cedulaFirma"></span>
-            </div>
-        </div>
-
-        <div class="pie-legal">
-            <p>Certifico que he recibido a mi entera satisfacción el valor indicado en este rol de pagos, no teniendo reclamo alguno presente ni futuro sobre los rubros aquí detallados.</p>
-        </div>
-
-        <div class="hash-seguridad">
-            Cód. Autenticidad: <span id="outHash">BORRADOR</span>
-        </div>
-    </div>
+    <div id="qr-code-container"></div>
 
     <script>
-        // ==========================================
-        //  PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
-        // ==========================================
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwZIcwaAYvjIdGcWBStTBfuNnFUJYlIKr9V87P0Yxt1top6t0RB01iTRPuJOgRY2_Rg/exec';
+        const CONFIG = {
+            empleador: { nombre: "DYLAN JOEL VELEZ VILLASAGUA", ci: "0926413667", direccion: "AV. DR. HUMBERTO DEL POZO SALTOS (SECTOR HUMBERDINA)" },
+            trabajador: { nombre: "MONICA ALEXANDRA MATUTE IBARRA", ci: "0201600202", cargo: "EMPLEADA DOMÉSTICA" },
+            sueldoBaseFull: 264.38, 
+            sbu2025: 470.00,
+            iessPorc: 0.0945,
+            formaPago: "EFECTIVO"
+        };
 
-        // --- Lógica Visual ---
-        function actualizar() {
-            // Textos
-            document.getElementById('outIdDoc').innerText = val('inIdDoc');
-            document.getElementById('outEmpleador').innerText = val('inEmpleador');
-            document.getElementById('firmaEmpleador').innerText = val('inEmpleador');
-            document.getElementById('outRucEmpleador').innerText = val('inRucEmpleador');
+        let hashActual = "";
+
+        window.onload = function() {
+            const today = new Date();
+            document.getElementById('fechaInicio').valueAsDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('fechaFin').valueAsDate = today;
+            document.getElementById('fechaEmision').valueAsDate = today;
             
-            document.getElementById('outTrabajador').innerText = val('inTrabajador');
-            document.getElementById('firmaTrabajador').innerText = val('inTrabajador');
-            document.getElementById('outCedulaTrabajador').innerText = val('inCedulaTrabajador');
-            document.getElementById('cedulaFirma').innerText = val('inCedulaTrabajador');
-            
-            document.getElementById('outCargo').innerText = val('inCargo');
-            document.getElementById('outDesde').innerText = val('inDesde');
-            document.getElementById('outHasta').innerText = val('inHasta');
-            document.getElementById('outDias').innerText = val('inDias');
+            generarHash(); // Generar un hash inicial
+            cargarHistorial();
+            calcularDiasAutomaticos(); 
+        };
 
-            // Valores
-            const sueldo = num('inSueldo');
-            const extras = num('inExtras');
-            const otros = num('inOtrosIng');
-            const iess = num('inIess');
-            const anticipos = num('inAnticipos');
-
-            const totIng = sueldo + extras + otros;
-            const totEgr = iess + anticipos;
-            const liquido = totIng - totEgr;
-
-            // Renderizar Valores
-            document.getElementById('outSueldo').innerText = sueldo.toFixed(2);
-            document.getElementById('outExtras').innerText = extras.toFixed(2);
-            document.getElementById('outOtrosIng').innerText = otros.toFixed(2);
-            
-            document.getElementById('outIess').innerText = iess.toFixed(2);
-            document.getElementById('outAnticipos').innerText = anticipos.toFixed(2);
-
-            document.getElementById('subIngresos').innerText = totIng.toFixed(2);
-            document.getElementById('subEgresos').innerText = totEgr.toFixed(2);
-            document.getElementById('outLiquido').innerText = '$ ' + liquido.toFixed(2);
+        // --- 1. SEGURIDAD: GENERADOR DE HASH ---
+        function generarHash() {
+            const chars = 'ABCDEF0123456789';
+            let randomStr = '';
+            for (let i = 0; i < 6; i++) {
+                randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            const date = new Date();
+            const mes = (date.getMonth() + 1).toString().padStart(2, '0');
+            // Formato: ROL-MES-RANDOM (Ej: ROL-12-A7B2)
+            hashActual = `ROL-${mes}-${randomStr}`;
+            document.getElementById('hashDisplay').innerText = `HASH: ${hashActual}`;
         }
 
-        // Helpers
-        function val(id) { return document.getElementById(id).value; }
-        function num(id) { return parseFloat(document.getElementById(id).value) || 0; }
-        function msg(texto) { document.getElementById('msgEstado').innerText = texto; }
+        // Event Listeners
+        document.getElementById('fechaInicio').addEventListener('change', calcularDiasAutomaticos);
+        document.getElementById('fechaFin').addEventListener('change', calcularDiasAutomaticos);
+        document.querySelectorAll('input').forEach(input => {
+            if(input.id !== 'fechaInicio' && input.id !== 'fechaFin') {
+                input.addEventListener('input', calcularValores);
+                input.addEventListener('change', calcularValores);
+            }
+        });
 
-        // --- Lógica de Base de Datos ---
+        // --- 2. CÁLCULOS (Lógica de negocio) ---
+        function calcularDiasAutomaticos() {
+            const f1 = document.getElementById('fechaInicio').value;
+            const f2 = document.getElementById('fechaFin').value;
+            if(f1 && f2) {
+                const date1 = new Date(f1); const date2 = new Date(f2);
+                let diffDays = Math.ceil(Math.abs(date2 - date1) / (1000 * 60 * 60 * 24)) + 1; 
+                if (date2 < date1) diffDays = 0;
+                document.getElementById('diasTrab').value = diffDays;
+                document.getElementById('labelDias').innerText = diffDays;
+                calcularValores(); 
+            }
+        }
 
-        function guardarRol() {
-            if(!confirm("¿Confirmar registro del pago?")) return;
-            msg("Guardando...");
+        function calcularValores() {
+            const dias = parseInt(document.getElementById('diasTrab').value) || 0;
+            const extras = parseFloat(document.getElementById('extras').value) || 0;
+            const prestamos = parseFloat(document.getElementById('prestamos').value) || 0;
+            const incluyeDecimos = document.getElementById('pagarDecimos').checked;
 
-            const hash = Math.random().toString(36).substring(2, 10).toUpperCase();
-            document.getElementById('outHash').innerText = hash;
+            let sueldoGanado = (CONFIG.sueldoBaseFull / 30) * dias;
+            let decimoTercero = 0; let decimoCuarto = 0;
+            
+            if (incluyeDecimos) {
+                decimoTercero = (sueldoGanado + extras) / 12;
+                decimoCuarto = (CONFIG.sbu2025 / 360) * dias;
+                document.getElementById('resumenDecimos').classList.remove('hidden');
+            } else {
+                document.getElementById('resumenDecimos').classList.add('hidden');
+            }
 
-            const payload = {
-                id_unico: val('inIdDoc'),
-                fecha_creacion: new Date(),
-                empleador: val('inEmpleador'),
-                trabajador: val('inTrabajador'),
-                cedula: val('inCedulaTrabajador'),
-                cargo: val('inCargo'),
-                desde: val('inDesde'),
-                hasta: val('inHasta'),
-                liquido: document.getElementById('outLiquido').innerText,
-                // Guardamos todo el estado del formulario para recuperarlo exacto
-                data_completa: {
-                    sueldo: val('inSueldo'),
-                    extras: val('inExtras'),
-                    otros: val('inOtrosIng'),
-                    iess: val('inIess'),
-                    anticipos: val('inAnticipos'),
-                    dias: val('inDias'),
-                    ruc_empleador: val('inRucEmpleador')
-                },
-                hash_seguridad: hash
+            let aporteIess = (sueldoGanado + extras) * CONFIG.iessPorc;
+            let liquido = (sueldoGanado + extras + decimoTercero + decimoCuarto) - aporteIess - prestamos;
+
+            document.getElementById('viewBase').innerText = `$ ${sueldoGanado.toFixed(2)}`;
+            document.getElementById('viewTotalDecimos').innerText = `$ ${(decimoTercero + decimoCuarto).toFixed(2)}`;
+            document.getElementById('viewIess').innerText = `$ ${aporteIess.toFixed(2)}`;
+            document.getElementById('viewPrestamos').innerText = `$ ${prestamos.toFixed(2)}`;
+            document.getElementById('totalLiquido').innerText = `$ ${liquido.toFixed(2)}`;
+
+            return { sueldoGanado, extras, decimoTercero, decimoCuarto, aporteIess, prestamos, liquido };
+        }
+
+        // --- 3. PROCESO MAESTRO (Generar QR -> Guardar -> PDF) ---
+        async function procesarRol() {
+            const val = calcularValores();
+            // 1. Datos para el QR (Resumen para verificación rápida)
+            const qrData = `VALIDO\nHash: ${hashActual}\nPago: $${val.liquido.toFixed(2)}\nEmp: ${CONFIG.trabajador.nombre.split(' ')[0]}\nFecha: ${document.getElementById('fechaEmision').value}`;
+            
+            // 2. Generar imagen QR
+            document.getElementById('qr-code-container').innerHTML = '';
+            const qrCode = new QRCode(document.getElementById('qr-code-container'), {
+                text: qrData, width: 100, height: 100
+            });
+
+            // Esperar un momento a que el QR se renderice en el DOM
+            setTimeout(() => {
+                const canvas = document.querySelector('#qr-code-container canvas');
+                const qrImage = canvas.toDataURL("image/png");
+                
+                // 3. Guardar en BD
+                guardarEnHistorial(val);
+
+                // 4. Crear PDF con el QR
+                crearPDF(val, qrImage);
+                
+                // 5. Regenerar Hash para el próximo
+                generarHash();
+            }, 300);
+        }
+
+        function crearPDF(val, qrImg) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const fInicio = document.getElementById('fechaInicio').value.split('-').reverse().join('/');
+            const fFin = document.getElementById('fechaFin').value.split('-').reverse().join('/');
+            const dias = document.getElementById('diasTrab').value;
+
+            // Encabezado
+            doc.setFontSize(16); doc.setFont("helvetica", "bold");
+            doc.text("ROL DE PAGOS CERTIFICADO", 105, 20, null, null, 'center');
+            doc.setFontSize(10); doc.setFont("helvetica", "normal");
+            doc.text(`CÓDIGO DE SEGURIDAD (HASH): ${hashActual}`, 105, 26, null, null, 'center');
+            doc.text(`PERÍODO: ${fInicio} AL ${fFin}`, 105, 32, null, null, 'center');
+
+            // Caja Datos
+            doc.setDrawColor(0); doc.setFillColor(245, 247, 250);
+            doc.rect(14, 38, 182, 35, 'F'); doc.rect(14, 38, 182, 35);
+
+            doc.setFontSize(9);
+            // Empleador
+            doc.setFont("helvetica", "bold"); doc.text("EMPLEADOR:", 18, 45);
+            doc.setFont("helvetica", "normal"); doc.text(CONFIG.empleador.nombre, 60, 45);
+            doc.setFont("helvetica", "bold"); doc.text("CI:", 18, 50);
+            doc.setFont("helvetica", "normal"); doc.text(CONFIG.empleador.ci, 60, 50);
+            // Trabajador
+            doc.setFont("helvetica", "bold"); doc.text("TRABAJADOR:", 18, 58);
+            doc.setFont("helvetica", "normal"); doc.text(CONFIG.trabajador.nombre, 60, 58);
+            doc.setFont("helvetica", "bold"); doc.text("CI:", 120, 58);
+            doc.setFont("helvetica", "normal"); doc.text(CONFIG.trabajador.ci, 130, 58);
+
+            // Tabla
+            let y = 80;
+            doc.setFillColor(30, 41, 59); 
+            doc.rect(14, y, 182, 8, 'F');
+            doc.setTextColor(255); doc.setFont("helvetica", "bold");
+            doc.text("CONCEPTO", 18, y+5);
+            doc.text("VALOR", 170, y+5, null, null, 'right');
+            
+            doc.setTextColor(0); doc.setFont("helvetica", "normal"); y += 14;
+
+            // Items
+            const addRow = (label, value) => {
+                doc.text(label, 18, y);
+                doc.text(value, 170, y, null, null, 'right');
+                y += 6;
             };
 
-            fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ accion: 'guardar_nuevo', payload: payload })
-            })
-            .then(r => r.json())
-            .then(res => {
-                msg(res.mensaje);
-                if(res.result === 'success') {
-                    alert("Guardado Correctamente");
-                    document.getElementById('btnAnular').style.display = 'inline-block';
-                    document.getElementById('btnGuardar').disabled = true;
-                } else {
-                    alert("Error: " + res.mensaje);
-                }
-            });
-        }
+            addRow(`Sueldo Proporcional (${dias} días)`, val.sueldoGanado.toFixed(2));
+            if(val.extras > 0) addRow("Horas Extras (+)", val.extras.toFixed(2));
+            if(val.decimoTercero > 0) addRow("Décimos (+)", (val.decimoTercero + val.decimoCuarto).toFixed(2));
+            addRow("Aporte IESS 9.45% (-)", val.aporteIess.toFixed(2));
+            if(val.prestamos > 0) addRow("Préstamos (-)", val.prestamos.toFixed(2));
 
-        function buscarRol() {
-            const id = val('inIdDoc');
-            if(!id) return alert("Ingrese ID");
-            msg("Buscando...");
+            // Total
+            y += 4; doc.line(14, y, 196, y); y += 8;
+            doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+            doc.text("TOTAL A RECIBIR (EFECTIVO):", 18, y);
+            doc.text(`$ ${val.liquido.toFixed(2)}`, 170, y, null, null, 'right');
 
-            fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ accion: 'buscar_completo', id_unico: id })
-            })
-            .then(r => r.json())
-            .then(res => {
-                if(res.result === 'success') {
-                    msg("Datos cargados");
-                    const d = res.data;
-                    const full = d.data_completa || {}; // Data interna
-
-                    // Llenar formulario
-                    document.getElementById('inEmpleador').value = d.empleador || '';
-                    document.getElementById('inRucEmpleador').value = full.ruc_empleador || '';
-                    document.getElementById('inTrabajador').value = d.trabajador || '';
-                    document.getElementById('inCedulaTrabajador').value = d.cedula || '';
-                    document.getElementById('inCargo').value = d.cargo || '';
-                    document.getElementById('inDesde').value = d.desde || '';
-                    document.getElementById('inHasta').value = d.hasta || '';
-                    document.getElementById('inDias').value = full.dias || 30;
-                    
-                    document.getElementById('inSueldo').value = full.sueldo || 0;
-                    document.getElementById('inExtras').value = full.extras || 0;
-                    document.getElementById('inOtrosIng').value = full.otros || 0;
-                    document.getElementById('inIess').value = full.iess || 0;
-                    document.getElementById('inAnticipos').value = full.anticipos || 0;
-                    
-                    document.getElementById('outHash').innerText = d.hash_seguridad;
-
-                    actualizar();
-
-                    // Manejo Estado
-                    const hoja = document.getElementById('hojaPapel');
-                    if(d.estado_actual === 'anulado') {
-                        hoja.classList.add('anulado');
-                        document.getElementById('btnAnular').style.display = 'none';
-                        document.getElementById('btnGuardar').innerText = "Crear Copia Nueva";
-                        document.getElementById('btnGuardar').disabled = false;
-                        alert("Este rol está ANULADO");
-                    } else {
-                        hoja.classList.remove('anulado');
-                        document.getElementById('btnAnular').style.display = 'inline-block';
-                        document.getElementById('btnGuardar').disabled = true;
-                    }
-                } else {
-                    msg("No encontrado");
-                    alert("No existe registro con ese ID");
-                    document.getElementById('btnGuardar').disabled = false;
-                    document.getElementById('hojaPapel').classList.remove('anulado');
-                }
-            });
-        }
-
-        function anularRol() {
-            const motivo = prompt("Motivo de la anulación:");
-            if(!motivo) return;
+            // QR Y FIRMAS
+            y += 15;
+            // Pegar Imagen QR
+            doc.addImage(qrImg, 'PNG', 160, y, 25, 25);
             
-            fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ 
-                    accion: 'anular', 
-                    id_unico: val('inIdDoc'), 
-                    motivo: motivo 
-                })
-            })
-            .then(r => r.json())
-            .then(res => {
-                if(res.result === 'success') {
-                    alert("Documento ANULADO");
-                    document.getElementById('hojaPapel').classList.add('anulado');
-                    document.getElementById('btnAnular').style.display = 'none';
-                    document.getElementById('btnGuardar').disabled = false;
-                    document.getElementById('btnGuardar').innerText = "Crear Nuevo";
-                }
+            doc.setFontSize(8); doc.setFont("helvetica", "normal");
+            doc.text("Escanee para verificar autenticidad", 160, y+28);
+
+            doc.setFontSize(9);
+            doc.text(`Fecha Emisión: ${document.getElementById('fechaEmision').value}`, 18, y+5);
+            doc.text(`Dirección: ${CONFIG.empleador.direccion}`, 18, y+10);
+
+            y += 20; 
+            doc.line(25, y+15, 85, y+15); doc.line(105, y+15, 165, y+15);
+            doc.text("EMPLEADOR", 40, y+20); doc.text("RECIBÍ CONFORME", 120, y+20);
+            
+            doc.save(`Rol_${hashActual}.pdf`);
+        }
+
+        // --- 4. BASE DE DATOS Y RESPALDOS (BACKUP) ---
+        function guardarEnHistorial(val) {
+            const registro = {
+                id: Date.now(),
+                hash: hashActual,
+                periodo: `${document.getElementById('fechaInicio').value} al ${document.getElementById('fechaFin').value}`,
+                liquido: val.liquido.toFixed(2),
+                fecha: document.getElementById('fechaEmision').value
+            };
+            let historial = JSON.parse(localStorage.getItem('nomina_secure_db')) || [];
+            historial.push(registro);
+            localStorage.setItem('nomina_secure_db', JSON.stringify(historial));
+            cargarHistorial();
+        }
+
+        function cargarHistorial(filtro = "") {
+            let historial = JSON.parse(localStorage.getItem('nomina_secure_db')) || [];
+            const tbody = document.getElementById('tablaHistorial');
+            tbody.innerHTML = '';
+            
+            // Ordenar por fecha reciente
+            historial.sort((a,b) => b.id - a.id);
+
+            // Filtrar
+            const filtrados = historial.filter(item => 
+                item.hash.toLowerCase().includes(filtro.toLowerCase()) || 
+                item.fecha.includes(filtro)
+            );
+
+            if(filtrados.length === 0) { document.getElementById('emptyMsg').style.display = 'block'; return; }
+            document.getElementById('emptyMsg').style.display = 'none';
+
+            filtrados.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 border-b">
+                        <div class="font-bold text-slate-700 text-xs">${item.periodo}</div>
+                        <div class="text-[10px] text-emerald-600 bg-emerald-100 inline-block px-1 rounded mt-1 font-mono">${item.hash}</div>
+                    </td>
+                    <td class="p-3 border-b font-bold text-slate-800">$${item.liquido}</td>
+                    <td class="p-3 border-b text-center">
+                        <button onclick="eliminarItem(${item.id})" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
         }
-        
-        // Iniciar
-        actualizar();
+
+        // --- FUNCIONES DE RESPALDO (NEVER DELETE) ---
+        function descargarBackup() {
+            const data = localStorage.getItem('nomina_secure_db');
+            if(!data) return alert("No hay datos para respaldar");
+            const blob = new Blob([data], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `RESPALDO_NOMINA_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
+
+        function importarBackup(input) {
+            const file = input.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    if(Array.isArray(json)) {
+                        localStorage.setItem('nomina_secure_db', JSON.stringify(json));
+                        cargarHistorial();
+                        alert("✅ Respaldo restaurado con éxito.");
+                    }
+                } catch(err) { alert("❌ Archivo inválido"); }
+            };
+            reader.readAsText(file);
+        }
+
+        // Utilitarios
+        function filtrarHistorial() {
+            const texto = document.getElementById('buscadorHash').value;
+            cargarHistorial(texto);
+        }
+        function eliminarItem(id) {
+            if(confirm("¿Eliminar registro?")) {
+                let historial = JSON.parse(localStorage.getItem('nomina_secure_db')) || [];
+                historial = historial.filter(item => item.id !== id);
+                localStorage.setItem('nomina_secure_db', JSON.stringify(historial));
+                cargarHistorial();
+            }
+        }
+        function borrarHistorial() {
+             if(confirm("⚠ ¿ESTÁS SEGURO? Se borrará todo. Asegúrate de tener un respaldo.")) { 
+                localStorage.removeItem('nomina_secure_db'); 
+                cargarHistorial(); 
+            }
+        }
+        function exportarExcel() {
+            let historial = JSON.parse(localStorage.getItem('nomina_secure_db')) || [];
+            if(historial.length === 0) return alert("Nada que exportar");
+            const ws = XLSX.utils.json_to_sheet(historial);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Pagos");
+            XLSX.writeFile(wb, "Reporte_Nomina.xlsx");
+        }
     </script>
 </body>
 </html>
