@@ -3,441 +3,439 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plataforma de Roles</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Rol de Pagos - Servicio Doméstico</title>
     <style>
-        :root {
-            --sidebar-bg: #1e293b;
-            --sidebar-text: #e2e8f0;
-            --accent: #3b82f6;
-            --danger: #ef4444;
-            --success: #10b981;
-            --paper-width: 210mm;
-            --paper-height: 297mm;
-        }
-
+        /* --- ESTILOS BASE (Para imprimir y ver) --- */
         body {
+            font-family: 'Times New Roman', Times, serif; /* Tipografía legal clásica */
+            background-color: #555;
             margin: 0;
-            font-family: 'Inter', sans-serif;
-            height: 100vh;
-            display: flex;
-            background-color: #f1f5f9;
-            overflow: hidden; /* Evita scroll en el body, solo en paneles */
-        }
-
-        /* --- 1. BARRA LATERAL (Editor) --- */
-        .sidebar {
-            width: 350px;
-            background-color: var(--sidebar-bg);
-            color: var(--sidebar-text);
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid #334155;
-            z-index: 10;
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            background-color: #0f172a;
-            border-bottom: 1px solid #334155;
-            display: flex;
             align-items: center;
-            justify-content: space-between;
         }
 
-        .sidebar-header h2 { margin: 0; font-size: 1.2rem; font-weight: 600; }
-        .status-dot { height: 10px; width: 10px; background-color: #aaa; border-radius: 50%; display: inline-block; }
-
-        .sidebar-content {
+        /* Formulario de llenado (Solo visible en pantalla) */
+        .editor-container {
+            background: #fff;
+            width: 210mm;
             padding: 20px;
-            overflow-y: auto;
-            flex: 1;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-family: Arial, sans-serif; /* Arial para el editor es más fácil de leer */
+        }
+        
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
         }
 
-        .form-section { margin-bottom: 25px; }
-        .form-section h3 { 
-            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; 
-            color: #94a3b8; margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 5px; 
+        .editor-section {
+            grid-column: span 3;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #444;
         }
 
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 0.85rem; margin-bottom: 5px; color: #cbd5e1; }
-        .input-group input {
-            width: 100%; box-sizing: border-box;
-            background: #334155; border: 1px solid #475569;
-            color: white; padding: 10px; border-radius: 6px;
-            font-size: 0.9rem; transition: 0.2s;
-        }
-        .input-group input:focus { outline: none; border-color: var(--accent); background: #405069; }
+        .input-group { display: flex; flex-direction: column; }
+        .input-group label { font-size: 12px; font-weight: bold; color: #666; margin-bottom: 3px; }
+        .input-group input { padding: 5px; border: 1px solid #ccc; border-radius: 3px; }
 
-        .sidebar-footer {
-            padding: 20px;
-            background-color: #0f172a;
-            border-top: 1px solid #334155;
-            display: grid; gap: 10px;
+        .toolbar {
+            grid-column: span 3;
+            text-align: right;
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
         }
 
         button {
-            padding: 12px; border: none; border-radius: 6px;
-            font-weight: 600; cursor: pointer; transition: 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 10px 20px; cursor: pointer; font-weight: bold;
+            border: 1px solid #333; background: #fff; text-transform: uppercase;
         }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
-        .btn-danger:hover { background: var(--danger); color: white; }
-        .btn-ghost { background: transparent; color: #94a3b8; border: 1px solid #475569; }
-        .btn-ghost:hover { background: #334155; color: white; }
+        button:hover { background: #eee; }
+        .btn-save { background: #000; color: #fff; border: 1px solid #000; }
+        .btn-anular { background: #8b0000; color: #fff; border: 1px solid #8b0000; }
 
-        /* --- 2. ÁREA DE VISUALIZACIÓN (Preview) --- */
-        .preview-area {
-            flex: 1;
-            background-color: #cbd5e1; /* Color escritorio */
-            display: flex;
-            justify-content: center;
-            overflow-y: auto;
-            padding: 40px;
-        }
-
-        /* --- 3. LA HOJA A4 (Diseño Profesional) --- */
-        .sheet {
-            width: var(--paper-width);
-            min-height: var(--paper-height);
-            background: white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            padding: 15mm;
-            position: relative;
+        /* --- LA HOJA DE PAPEL (El Recibo) --- */
+        .hoja-recibo {
+            background: #fff;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
             box-sizing: border-box;
-            color: #111;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            
+            /* Trama de seguridad sutil */
+            background-image: repeating-linear-gradient(
+                45deg,
+                #f9f9f9,
+                #f9f9f9 1px,
+                #fff 1px,
+                #fff 4px
+            );
+            border: 1px solid #ccc;
         }
 
-        /* Marca de Agua tipo "Sello de Tinta" */
-        .stamp-anulado {
+        /* Marca de Agua ANULADO */
+        .sello-anulado {
             display: none;
             position: absolute;
             top: 40%; left: 50%;
-            transform: translate(-50%, -50%) rotate(-15deg);
-            border: 5px double #d32f2f;
-            color: #d32f2f;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 4rem;
-            font-weight: 900;
-            padding: 10px 20px;
-            text-transform: uppercase;
-            opacity: 0.6;
-            z-index: 100;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 100px;
+            color: rgba(200, 0, 0, 0.4);
+            border: 10px solid rgba(200, 0, 0, 0.4);
+            padding: 20px;
+            font-weight: bold;
+            z-index: 99;
             pointer-events: none;
-            mix-blend-mode: multiply; /* Efecto de tinta real */
+            text-transform: uppercase;
+        }
+        .hoja-recibo.anulado .sello-anulado { display: block; }
+        
+        /* Estructura del Recibo */
+        h1 { text-align: center; font-size: 18pt; text-transform: uppercase; text-decoration: underline; margin-bottom: 30px; }
+        
+        .caja-datos {
+            border: 1px solid #000;
+            padding: 15px;
+            margin-bottom: 20px;
         }
         
-        .sheet.is-void .stamp-anulado { display: block; }
-        .sheet.is-void { opacity: 0.9; }
+        .fila-datos { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .label { font-weight: bold; width: 140px; }
+        .valor { border-bottom: 1px dotted #999; flex: 1; margin-left: 10px; }
 
-        /* Cabecera del Rol */
-        .sheet-header {
-            display: flex; justify-content: space-between; align-items: flex-start;
-            border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;
+        .tabla-valores {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-bottom: 30px;
         }
-        .company-logo {
-            width: 50px; height: 50px; background: #000; /* Placeholder logo */
-            display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;
-            margin-right: 15px;
+        .tabla-valores th, .tabla-valores td {
+            border: 1px solid #000;
+            padding: 8px;
         }
-        .header-left { display: flex; align-items: center; }
-        .header-title h1 { font-size: 1.4rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .header-title p { margin: 0; font-size: 0.8rem; color: #555; }
-        
-        .rol-id-box {
-            text-align: right;
-            border: 1px solid #ccc; padding: 5px 10px; background: #f9f9f9;
-        }
-        .rol-id-box small { display: block; font-size: 0.6rem; color: #666; text-transform: uppercase; }
-        .rol-id-box span { font-family: monospace; font-size: 1rem; font-weight: bold; }
+        .tabla-valores th { background-color: #eee; text-align: center; font-size: 11pt; }
+        .derecha { text-align: right; }
+        .centro { text-align: center; }
 
-        /* Información Empleado */
-        .info-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-            margin-bottom: 20px; font-size: 0.9rem;
-            background: #f8f9fa; padding: 15px; border-radius: 4px; border: 1px solid #eee;
+        .seccion-firmas {
+            margin-top: 80px;
+            display: flex;
+            justify-content: space-between;
         }
-        .info-item strong { display: block; font-size: 0.75rem; color: #666; text-transform: uppercase; }
-
-        /* Tabla Financiera Limpia */
-        .financial-table {
-            width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-bottom: 30px;
-        }
-        .financial-table th {
-            text-align: left; padding: 10px; border-bottom: 2px solid #333;
-            text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px;
-        }
-        .financial-table td {
-            padding: 10px; border-bottom: 1px solid #eee;
-        }
-        .col-money { text-align: right; font-family: 'Courier New', monospace; font-weight: 600; }
-        
-        .total-row td {
-            border-top: 2px solid #333; border-bottom: none;
-            font-weight: bold; font-size: 1.1rem; padding-top: 15px;
-            background-color: rgba(0,0,0,0.02);
+        .firma-box {
+            width: 40%;
+            border-top: 1px solid #000;
+            text-align: center;
+            padding-top: 5px;
+            font-size: 11pt;
         }
 
-        /* Firmas */
-        .signatures {
-            margin-top: 80px; display: flex; justify-content: space-between;
-        }
-        .sign-box {
-            width: 40%; border-top: 1px solid #333; padding-top: 10px;
-            text-align: center; font-size: 0.85rem;
+        .pie-legal {
+            margin-top: 50px;
+            font-size: 8pt;
+            text-align: justify;
+            color: #666;
         }
 
-        /* Footer Seguridad */
-        .security-footer {
-            position: absolute; bottom: 10mm; left: 15mm; right: 15mm;
-            text-align: center; font-size: 0.6rem; color: #999;
-            border-top: 1px dotted #ccc; padding-top: 5px;
+        .hash-seguridad {
+            position: absolute; bottom: 10mm; right: 20mm;
+            font-family: 'Courier New', monospace; font-size: 9pt;
         }
 
-        /* --- ESTILOS DE IMPRESIÓN --- */
+        /* --- MODO IMPRESIÓN --- */
         @media print {
-            body { background: white; height: auto; display: block; overflow: visible; }
-            .sidebar { display: none; }
-            .preview-area { display: block; padding: 0; background: white; }
-            .sheet {
-                box-shadow: none; margin: 0; width: 100%; 
-                -webkit-print-color-adjust: exact; print-color-adjust: exact;
-            }
+            body { background: none; margin: 0; padding: 0; }
+            .editor-container, .no-print { display: none !important; }
+            .hoja-recibo { box-shadow: none; margin: 0; width: 100%; border: none; }
         }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar no-print">
-        <div class="sidebar-header">
-            <h2>Gestion de Nómina</h2>
-            <div id="statusDot" class="status-dot" title="Desconectado"></div>
-        </div>
-
-        <div class="sidebar-content">
-            <div class="form-section">
-                <h3>Datos Generales</h3>
-                <div class="input-group">
-                    <label>ID Documento</label>
-                    <input type="text" id="inpId" placeholder="Ej: ROL-2025-001" onkeyup="updatePreview()">
-                </div>
-                <div class="input-group">
-                    <label>Período (Mes/Año)</label>
-                    <input type="text" id="inpMes" value="Diciembre 2025" onkeyup="updatePreview()">
-                </div>
+    <div class="editor-container no-print">
+        <h3 style="margin-top:0;">📝 Editar Datos del Rol</h3>
+        <div class="editor-grid">
+            
+            <div class="editor-section">DATOS DEL EMPLEADOR</div>
+            <div class="input-group">
+                <label>Nombre Empleador</label>
+                <input type="text" id="inEmpleador" placeholder="Nombre Apellido" oninput="actualizar()">
+            </div>
+            <div class="input-group">
+                <label>C.I. / RUC Empleador</label>
+                <input type="text" id="inRucEmpleador" placeholder="17..." oninput="actualizar()">
             </div>
 
-            <div class="form-section">
-                <h3>Empleado</h3>
-                <div class="input-group">
-                    <label>Nombre Completo</label>
-                    <input type="text" id="inpNombre" placeholder="Nombre Apellido" onkeyup="updatePreview()">
-                </div>
-                <div class="input-group">
-                    <label>Cédula de Identidad</label>
-                    <input type="text" id="inpCedula" placeholder="1712345678" onkeyup="updatePreview()">
-                </div>
-                <div class="input-group">
-                    <label>Cargo</label>
-                    <input type="text" id="inpCargo" placeholder="Analista" onkeyup="updatePreview()">
-                </div>
+            <div class="editor-section">DATOS DE LA TRABAJADORA</div>
+            <div class="input-group">
+                <label>Nombre Trabajadora</label>
+                <input type="text" id="inTrabajador" placeholder="Nombre Apellido" oninput="actualizar()">
+            </div>
+            <div class="input-group">
+                <label>Cédula Trabajadora</label>
+                <input type="text" id="inCedulaTrabajador" oninput="actualizar()">
+            </div>
+            <div class="input-group">
+                <label>Cargo / Función</label>
+                <input type="text" id="inCargo" value="ASISTENTE DEL HOGAR" oninput="actualizar()">
             </div>
 
-            <div class="form-section">
-                <h3>Valores Económicos</h3>
-                <div class="input-group">
-                    <label>Sueldo Base ($)</label>
-                    <input type="number" id="inpSueldo" value="0.00" step="0.01" onkeyup="updatePreview()">
-                </div>
-                <div class="input-group">
-                    <label>Horas Extras ($)</label>
-                    <input type="number" id="inpHE" value="0.00" step="0.01" onkeyup="updatePreview()">
-                </div>
-                <div class="input-group">
-                    <label>Descuento IESS ($)</label>
-                    <input type="number" id="inpIESS" value="0.00" step="0.01" onkeyup="updatePreview()">
-                </div>
+            <div class="editor-section">PERÍODO Y VALORES</div>
+            <div class="input-group">
+                <label>Fecha Desde</label>
+                <input type="date" id="inDesde" oninput="actualizar()">
             </div>
-        </div>
-
-        <div class="sidebar-footer">
-            <button class="btn-ghost" onclick="buscarRol()">
-                <span>🔍</span> Buscar ID
-            </button>
-            <button class="btn-primary" id="btnGuardar" onclick="guardarRol()">
-                <span>💾</span> Guardar Oficial
-            </button>
-            <button class="btn-danger" id="btnAnular" onclick="anularRol()" style="display: none;">
-                <span>🚫</span> ANULAR
-            </button>
-            <button class="btn-ghost" onclick="window.print()" style="background: #e2e8f0; color: #0f172a;">
-                <span>🖨️</span> Imprimir
-            </button>
-        </div>
-    </aside>
-
-    <main class="preview-area">
-        <div id="hojaRol" class="sheet">
-            <div class="stamp-anulado">ANULADO</div>
-
-            <header class="sheet-header">
-                <div class="header-left">
-                    <div class="company-logo">G.R.</div> <div class="header-title">
-                        <h1>Rol de Pagos Individual</h1>
-                        <p>GAD PROVINCIAL / DEP. FINANCIERO</p>
-                    </div>
-                </div>
-                <div class="rol-id-box">
-                    <small>Nro. Control</small>
-                    <span id="viewId">---</span>
-                </div>
-            </header>
-
-            <div class="info-grid">
-                <div class="info-item">
-                    <strong>Empleado</strong>
-                    <span id="viewNombre">---</span>
-                </div>
-                <div class="info-item">
-                    <strong>Cédula</strong>
-                    <span id="viewCedula">---</span>
-                </div>
-                <div class="info-item">
-                    <strong>Cargo</strong>
-                    <span id="viewCargo">---</span>
-                </div>
-                <div class="info-item">
-                    <strong>Período de Pago</strong>
-                    <span id="viewMes">---</span>
-                </div>
+            <div class="input-group">
+                <label>Fecha Hasta</label>
+                <input type="date" id="inHasta" oninput="actualizar()">
+            </div>
+            <div class="input-group">
+                <label>Días Trabajados</label>
+                <input type="number" id="inDias" value="30" oninput="actualizar()">
+            </div>
+            
+            <div class="input-group">
+                <label>Sueldo Mensual ($)</label>
+                <input type="number" id="inSueldo" value="460.00" oninput="actualizar()">
+            </div>
+            <div class="input-group">
+                <label>Horas Extras ($)</label>
+                <input type="number" id="inExtras" value="0.00" oninput="actualizar()">
+            </div>
+            <div class="input-group">
+                <label>Transporte / Otros ($)</label>
+                <input type="number" id="inOtrosIng" value="0.00" oninput="actualizar()">
+            </div>
+            <div class="input-group">
+                <label>Aporte IESS 9.45% ($)</label>
+                <input type="number" id="inIess" value="0.00" oninput="actualizar()">
+            </div>
+            <div class="input-group">
+                <label>Anticipos / Préstamos ($)</label>
+                <input type="number" id="inAnticipos" value="0.00" oninput="actualizar()">
+            </div>
+            <div class="input-group">
+                <label>ID Documento</label>
+                <input type="text" id="inIdDoc" placeholder="Ej: ROL-DIC-2025" oninput="actualizar()">
             </div>
 
-            <table class="financial-table">
-                <thead>
-                    <tr>
-                        <th width="50%">Concepto</th>
-                        <th class="col-money">Ingresos</th>
-                        <th class="col-money">Descuentos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Sueldo Unificado</td>
-                        <td class="col-money" id="viewSueldo">0.00</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Horas Suplementarias / Extraordinarias</td>
-                        <td class="col-money" id="viewHE">0.00</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Aporte Personal IESS (9.45%)</td>
-                        <td></td>
-                        <td class="col-money" id="viewIESS">0.00</td>
-                    </tr>
-                    <tr style="height: 100px; vertical-align: top;">
-                        <td colspan="3" style="color: #ccc; padding-top: 20px;">/// Fin del detalle ///</td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr class="total-row">
-                        <td>LÍQUIDO A RECIBIR</td>
-                        <td colspan="2" class="col-money" id="viewLiquido" style="color: #000;">$ 0.00</td>
-                    </tr>
-                </tfoot>
-            </table>
-
-            <div class="signatures">
-                <div class="sign-box">
-                    <p><strong>Analista de Nómina</strong></p>
-                    <br><br>
-                    <p>Firma Autorizada</p>
-                </div>
-                <div class="sign-box">
-                    <p><strong><span id="firmaEmpleado">Empleado</span></strong></p>
-                    <br><br>
-                    <p>C.I. <span id="firmaCedula">---</span></p>
-                </div>
-            </div>
-
-            <div class="security-footer">
-                Documento generado electrónicamente. Código de Autenticidad: <span id="viewHash" style="font-family: monospace; color: #000;">NO-GUARDADO</span>
+            <div class="toolbar">
+                <span id="msgEstado" style="float: left; color: blue; font-weight: bold; padding-top: 10px;"></span>
+                <button onclick="buscarRol()">🔍 Buscar</button>
+                <button class="btn-save" id="btnGuardar" onclick="guardarRol()">💾 Guardar Oficial</button>
+                <button class="btn-anular" id="btnAnular" onclick="anularRol()" style="display:none;">🚫 Anular Documento</button>
+                <button onclick="window.print()">🖨️ Imprimir</button>
             </div>
         </div>
-    </main>
+    </div>
+
+    <div id="hojaPapel" class="hoja-recibo">
+        <div class="sello-anulado">ANULADO</div>
+        
+        <h1>ROL DE PAGOS - SERVICIO DOMÉSTICO</h1>
+        
+        <p style="text-align: right; margin-bottom: 20px;">
+            <strong>N° Documento:</strong> <span id="outIdDoc">---</span>
+        </p>
+
+        <div class="caja-datos">
+            <div class="fila-datos">
+                <span class="label">EMPLEADOR:</span>
+                <span class="valor" id="outEmpleador"></span>
+            </div>
+            <div class="fila-datos">
+                <span class="label">RUC / C.I.:</span>
+                <span class="valor" id="outRucEmpleador"></span>
+            </div>
+        </div>
+
+        <div class="caja-datos">
+            <div class="fila-datos">
+                <span class="label">TRABAJADORA:</span>
+                <span class="valor" id="outTrabajador"></span>
+            </div>
+            <div class="fila-datos">
+                <span class="label">CÉDULA:</span>
+                <span class="valor" id="outCedulaTrabajador"></span>
+            </div>
+            <div class="fila-datos">
+                <span class="label">CARGO:</span>
+                <span class="valor" id="outCargo"></span>
+            </div>
+            <div class="fila-datos">
+                <span class="label">PERÍODO:</span>
+                <span class="valor">
+                    Del <span id="outDesde">--/--/--</span> 
+                    al <span id="outHasta">--/--/--</span>
+                </span>
+            </div>
+            <div class="fila-datos">
+                <span class="label">DÍAS LABORADOS:</span>
+                <span class="valor" id="outDias"></span>
+            </div>
+        </div>
+
+        <table class="tabla-valores">
+            <thead>
+                <tr>
+                    <th>CONCEPTO</th>
+                    <th>INGRESOS (+)</th>
+                    <th>DESCUENTOS (-)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Sueldo Mensual Unificado</td>
+                    <td class="derecha" id="outSueldo">0.00</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Horas Suplementarias / Extraordinarias</td>
+                    <td class="derecha" id="outExtras">0.00</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Bonificación Transporte / Otros</td>
+                    <td class="derecha" id="outOtrosIng">0.00</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Aporte Personal IESS (9.45%)</td>
+                    <td></td>
+                    <td class="derecha" id="outIess">0.00</td>
+                </tr>
+                <tr>
+                    <td>Anticipos de Sueldo / Préstamos</td>
+                    <td></td>
+                    <td class="derecha" id="outAnticipos">0.00</td>
+                </tr>
+                <tr style="font-weight: bold; background: #f0f0f0;">
+                    <td class="derecha">SUBTOTALES:</td>
+                    <td class="derecha" id="subIngresos">0.00</td>
+                    <td class="derecha" id="subEgresos">0.00</td>
+                </tr>
+                <tr style="font-weight: bold; font-size: 14pt; border-top: 2px solid #000;">
+                    <td class="derecha">LÍQUIDO A RECIBIR:</td>
+                    <td colspan="2" class="centro" id="outLiquido">$ 0.00</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="seccion-firmas">
+            <div class="firma-box">
+                <br><br><br>
+                <span id="firmaEmpleador">F. Empleador</span><br>
+                <strong>EMPLEADOR</strong>
+            </div>
+            <div class="firma-box">
+                <br><br><br>
+                <span id="firmaTrabajador">F. Trabajadora</span><br>
+                <strong>RECIBÍ CONFORME</strong><br>
+                C.I.: <span id="cedulaFirma"></span>
+            </div>
+        </div>
+
+        <div class="pie-legal">
+            <p>Certifico que he recibido a mi entera satisfacción el valor indicado en este rol de pagos, no teniendo reclamo alguno presente ni futuro sobre los rubros aquí detallados.</p>
+        </div>
+
+        <div class="hash-seguridad">
+            Cód. Autenticidad: <span id="outHash">BORRADOR</span>
+        </div>
+    </div>
 
     <script>
-        // ==============================
-        // CONFIGURACIÓN API
-        // ==============================
+        // ==========================================
+        //  PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+        // ==========================================
         const API_URL = 'https://script.google.com/macros/s/AKfycbwZIcwaAYvjIdGcWBStTBfuNnFUJYlIKr9V87P0Yxt1top6t0RB01iTRPuJOgRY2_Rg/exec';
 
         // --- Lógica Visual ---
-        function updatePreview() {
-            // Mapping de inputs a vista
-            document.getElementById('viewId').innerText = document.getElementById('inpId').value || '---';
-            document.getElementById('viewMes').innerText = document.getElementById('inpMes').value || '---';
+        function actualizar() {
+            // Textos
+            document.getElementById('outIdDoc').innerText = val('inIdDoc');
+            document.getElementById('outEmpleador').innerText = val('inEmpleador');
+            document.getElementById('firmaEmpleador').innerText = val('inEmpleador');
+            document.getElementById('outRucEmpleador').innerText = val('inRucEmpleador');
             
-            const nombre = document.getElementById('inpNombre').value || '---';
-            document.getElementById('viewNombre').innerText = nombre;
-            document.getElementById('firmaEmpleado').innerText = nombre;
+            document.getElementById('outTrabajador').innerText = val('inTrabajador');
+            document.getElementById('firmaTrabajador').innerText = val('inTrabajador');
+            document.getElementById('outCedulaTrabajador').innerText = val('inCedulaTrabajador');
+            document.getElementById('cedulaFirma').innerText = val('inCedulaTrabajador');
             
-            const cedula = document.getElementById('inpCedula').value || '---';
-            document.getElementById('viewCedula').innerText = cedula;
-            document.getElementById('firmaCedula').innerText = cedula;
+            document.getElementById('outCargo').innerText = val('inCargo');
+            document.getElementById('outDesde').innerText = val('inDesde');
+            document.getElementById('outHasta').innerText = val('inHasta');
+            document.getElementById('outDias').innerText = val('inDias');
 
-            document.getElementById('viewCargo').innerText = document.getElementById('inpCargo').value || '---';
+            // Valores
+            const sueldo = num('inSueldo');
+            const extras = num('inExtras');
+            const otros = num('inOtrosIng');
+            const iess = num('inIess');
+            const anticipos = num('inAnticipos');
 
-            // Cálculos
-            const sueldo = parseFloat(document.getElementById('inpSueldo').value) || 0;
-            const he = parseFloat(document.getElementById('inpHE').value) || 0;
-            const iess = parseFloat(document.getElementById('inpIESS').value) || 0;
+            const totIng = sueldo + extras + otros;
+            const totEgr = iess + anticipos;
+            const liquido = totIng - totEgr;
 
-            document.getElementById('viewSueldo').innerText = sueldo.toFixed(2);
-            document.getElementById('viewHE').innerText = he.toFixed(2);
-            document.getElementById('viewIESS').innerText = iess.toFixed(2);
+            // Renderizar Valores
+            document.getElementById('outSueldo').innerText = sueldo.toFixed(2);
+            document.getElementById('outExtras').innerText = extras.toFixed(2);
+            document.getElementById('outOtrosIng').innerText = otros.toFixed(2);
+            
+            document.getElementById('outIess').innerText = iess.toFixed(2);
+            document.getElementById('outAnticipos').innerText = anticipos.toFixed(2);
 
-            const liquido = (sueldo + he) - iess;
-            document.getElementById('viewLiquido').innerText = '$ ' + liquido.toFixed(2);
+            document.getElementById('subIngresos').innerText = totIng.toFixed(2);
+            document.getElementById('subEgresos').innerText = totEgr.toFixed(2);
+            document.getElementById('outLiquido').innerText = '$ ' + liquido.toFixed(2);
         }
+
+        // Helpers
+        function val(id) { return document.getElementById(id).value; }
+        function num(id) { return parseFloat(document.getElementById(id).value) || 0; }
+        function msg(texto) { document.getElementById('msgEstado').innerText = texto; }
 
         // --- Lógica de Base de Datos ---
-        
-        function setStatus(loading) {
-            const dot = document.getElementById('statusDot');
-            if (loading) {
-                dot.style.backgroundColor = '#eab308'; // Amarillo (Cargando)
-                dot.title = "Procesando...";
-                document.body.style.cursor = 'wait';
-            } else {
-                dot.style.backgroundColor = '#10b981'; // Verde (Listo)
-                dot.title = "Conectado";
-                document.body.style.cursor = 'default';
-            }
-        }
 
         function guardarRol() {
-            if(!confirm("¿Confirmar registro oficial de este rol?")) return;
-            setStatus(true);
+            if(!confirm("¿Confirmar registro del pago?")) return;
+            msg("Guardando...");
 
-            // Hash simple
-            const hash = Math.random().toString(36).substring(2, 12).toUpperCase();
-            document.getElementById('viewHash').innerText = hash;
+            const hash = Math.random().toString(36).substring(2, 10).toUpperCase();
+            document.getElementById('outHash').innerText = hash;
 
             const payload = {
-                id_unico: document.getElementById('inpId').value,
-                mes: document.getElementById('inpMes').value,
-                cedula: document.getElementById('inpCedula').value,
-                empleado: document.getElementById('inpNombre').value,
-                cargo: document.getElementById('inpCargo').value, // Agregado campo cargo
-                sueldo: document.getElementById('inpSueldo').value,
-                he: document.getElementById('inpHE').value,
-                iess: document.getElementById('inpIESS').value,
-                liquido_recibir: document.getElementById('viewLiquido').innerText,
+                id_unico: val('inIdDoc'),
+                fecha_creacion: new Date(),
+                empleador: val('inEmpleador'),
+                trabajador: val('inTrabajador'),
+                cedula: val('inCedulaTrabajador'),
+                cargo: val('inCargo'),
+                desde: val('inDesde'),
+                hasta: val('inHasta'),
+                liquido: document.getElementById('outLiquido').innerText,
+                // Guardamos todo el estado del formulario para recuperarlo exacto
+                data_completa: {
+                    sueldo: val('inSueldo'),
+                    extras: val('inExtras'),
+                    otros: val('inOtrosIng'),
+                    iess: val('inIess'),
+                    anticipos: val('inAnticipos'),
+                    dias: val('inDias'),
+                    ruc_empleador: val('inRucEmpleador')
+                },
                 hash_seguridad: hash
             };
 
@@ -446,23 +444,22 @@
                 body: JSON.stringify({ accion: 'guardar_nuevo', payload: payload })
             })
             .then(r => r.json())
-            .then(data => {
-                setStatus(false);
-                if(data.result === 'success') {
-                    alert("✅ Guardado Exitoso");
-                    document.getElementById('btnAnular').style.display = 'flex';
-                    document.getElementById('btnGuardar').style.display = 'none';
+            .then(res => {
+                msg(res.mensaje);
+                if(res.result === 'success') {
+                    alert("Guardado Correctamente");
+                    document.getElementById('btnAnular').style.display = 'inline-block';
+                    document.getElementById('btnGuardar').disabled = true;
                 } else {
-                    alert("❌ " + data.mensaje);
+                    alert("Error: " + res.mensaje);
                 }
-            })
-            .catch(e => { setStatus(false); alert("Error de red"); });
+            });
         }
 
         function buscarRol() {
-            const id = document.getElementById('inpId').value;
-            if(!id) return alert("Escribe un ID primero");
-            setStatus(true);
+            const id = val('inIdDoc');
+            if(!id) return alert("Ingrese ID");
+            msg("Buscando...");
 
             fetch(API_URL, {
                 method: 'POST',
@@ -470,75 +467,79 @@
             })
             .then(r => r.json())
             .then(res => {
-                setStatus(false);
                 if(res.result === 'success') {
+                    msg("Datos cargados");
                     const d = res.data;
+                    const full = d.data_completa || {}; // Data interna
+
                     // Llenar formulario
-                    document.getElementById('inpMes').value = d.mes;
-                    document.getElementById('inpNombre').value = d.empleado;
-                    document.getElementById('inpCedula').value = d.cedula;
-                    document.getElementById('inpCargo').value = d.cargo || '';
-                    document.getElementById('inpSueldo').value = d.sueldo;
-                    document.getElementById('inpHE').value = d.he;
-                    document.getElementById('inpIESS').value = d.iess;
-                    document.getElementById('viewHash').innerText = d.hash_seguridad;
+                    document.getElementById('inEmpleador').value = d.empleador || '';
+                    document.getElementById('inRucEmpleador').value = full.ruc_empleador || '';
+                    document.getElementById('inTrabajador').value = d.trabajador || '';
+                    document.getElementById('inCedulaTrabajador').value = d.cedula || '';
+                    document.getElementById('inCargo').value = d.cargo || '';
+                    document.getElementById('inDesde').value = d.desde || '';
+                    document.getElementById('inHasta').value = d.hasta || '';
+                    document.getElementById('inDias').value = full.dias || 30;
+                    
+                    document.getElementById('inSueldo').value = full.sueldo || 0;
+                    document.getElementById('inExtras').value = full.extras || 0;
+                    document.getElementById('inOtrosIng').value = full.otros || 0;
+                    document.getElementById('inIess').value = full.iess || 0;
+                    document.getElementById('inAnticipos').value = full.anticipos || 0;
+                    
+                    document.getElementById('outHash').innerText = d.hash_seguridad;
 
-                    // Actualizar UI
-                    updatePreview();
+                    actualizar();
 
-                    // Manejo Estado Anulado
-                    const sheet = document.getElementById('hojaRol');
+                    // Manejo Estado
+                    const hoja = document.getElementById('hojaPapel');
                     if(d.estado_actual === 'anulado') {
-                        sheet.classList.add('is-void');
+                        hoja.classList.add('anulado');
                         document.getElementById('btnAnular').style.display = 'none';
-                        document.getElementById('btnGuardar').style.display = 'flex';
-                        document.getElementById('btnGuardar').innerHTML = "<span>💾</span> Crear Nuevo (Reemplazo)";
-                        alert("⚠️ ESTE ROL FUE ANULADO");
+                        document.getElementById('btnGuardar').innerText = "Crear Copia Nueva";
+                        document.getElementById('btnGuardar').disabled = false;
+                        alert("Este rol está ANULADO");
                     } else {
-                        sheet.classList.remove('is-void');
-                        document.getElementById('btnAnular').style.display = 'flex';
-                        document.getElementById('btnGuardar').style.display = 'none';
+                        hoja.classList.remove('anulado');
+                        document.getElementById('btnAnular').style.display = 'inline-block';
+                        document.getElementById('btnGuardar').disabled = true;
                     }
-
                 } else {
-                    alert("No encontrado");
-                    // Reset UI para crear nuevo
-                    document.getElementById('hojaRol').classList.remove('is-void');
-                    document.getElementById('btnGuardar').style.display = 'flex';
-                    document.getElementById('btnGuardar').innerHTML = "<span>💾</span> Guardar Oficial";
-                    document.getElementById('btnAnular').style.display = 'none';
+                    msg("No encontrado");
+                    alert("No existe registro con ese ID");
+                    document.getElementById('btnGuardar').disabled = false;
+                    document.getElementById('hojaPapel').classList.remove('anulado');
                 }
             });
         }
 
         function anularRol() {
-            const motivo = prompt("Motivo de anulación:");
+            const motivo = prompt("Motivo de la anulación:");
             if(!motivo) return;
-            setStatus(true);
-
+            
             fetch(API_URL, {
                 method: 'POST',
                 body: JSON.stringify({ 
                     accion: 'anular', 
-                    id_unico: document.getElementById('inpId').value, 
+                    id_unico: val('inIdDoc'), 
                     motivo: motivo 
                 })
             })
             .then(r => r.json())
-            .then(d => {
-                setStatus(false);
-                if(d.result === 'success') {
-                    document.getElementById('hojaRol').classList.add('is-void');
+            .then(res => {
+                if(res.result === 'success') {
+                    alert("Documento ANULADO");
+                    document.getElementById('hojaPapel').classList.add('anulado');
                     document.getElementById('btnAnular').style.display = 'none';
-                    document.getElementById('btnGuardar').style.display = 'flex';
-                    document.getElementById('btnGuardar').innerHTML = "<span>💾</span> Crear Nuevo (Reemplazo)";
-                    alert("Rol Anulado");
+                    document.getElementById('btnGuardar').disabled = false;
+                    document.getElementById('btnGuardar').innerText = "Crear Nuevo";
                 }
             });
         }
-
-        // Init
-        updatePreview();
+        
+        // Iniciar
+        actualizar();
     </script>
 </body>
 </html>
