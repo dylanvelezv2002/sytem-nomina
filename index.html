@@ -1,136 +1,277 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="antialiased">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nómina Doméstica 2025</title>
+    <title>Nómina Doméstica 2025 | Premium</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                    mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+                },
+                extend: {
+                    colors: {
+                        slate: { 850: '#1e293b' } // Un tono más oscuro personalizado
+                    }
+                }
+            }
+        }
+    </script>
     
     <style>
-        .security-bg { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 10px 10px; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #10b981; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
+        body { background-color: #f1f5f9; /* Slate 100 más limpio */ }
+        
+        /* Spinner de carga mejorado */
+        .loader { border: 3px solid rgba(16, 185, 129, 0.2); border-top: 3px solid #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .row-anulado { background-color: #fee2e2 !important; color: #991b1b; text-decoration: line-through; }
-        .row-anulado .no-strike { text-decoration: none; }
+        
+        /* Estilos para filas anuladas */
+        .row-anulado { background-color: #fef2f2 !important; /* Red 50 */ color: #991b1b; }
+        .row-anulado .cell-content { text-decoration: line-through; opacity: 0.7; }
+        .no-strike { text-decoration: none !important; opacity: 1 !important; }
+
+        /* Inputs personalizados */
+        .input-modern { @apply w-full text-sm border-slate-200 rounded-lg p-2.5 transition-all duration-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none shadow-sm; }
+        .label-modern { @apply block text-xs font-semibold text-slate-600 mb-1.5 ml-1; }
+        
+        /* Scrollbar personalizada para la tabla */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 font-sans text-slate-800">
+<body class="min-h-screen p-4 md:p-6 font-sans text-slate-800 bg-slate-100/50">
 
-    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 z-50 hidden flex-col items-center justify-center">
-        <div class="loader mb-2"></div>
-        <p class="text-sm font-bold text-emerald-600">Procesando...</p>
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/60 backdrop-blur-sm z-50 hidden flex-col items-center justify-center transition-all">
+        <div class="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center">
+            <div class="loader mb-4"></div>
+            <p class="text-sm font-semibold text-slate-700">Procesando, por favor espere...</p>
+        </div>
     </div>
 
-    <nav class="bg-slate-900 text-white p-4 rounded-xl shadow-lg max-w-6xl mx-auto mb-6 flex justify-between items-center">
-        <h1 class="font-bold text-lg flex items-center gap-2">
-            <i class="fas fa-file-invoice-dollar text-emerald-400"></i>
-            <span>Nómina <span class="text-emerald-400 font-light">SecureCloud 2025</span></span>
-        </h1>
-        <button onclick="cargarHistorial()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded transition border border-slate-600">
-            <i class="fas fa-sync-alt mr-1"></i> Recargar Datos
+    <nav class="bg-slate-850 text-white p-4 rounded-2xl shadow-lg shadow-slate-200/50 max-w-6xl mx-auto mb-8 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-slate-700/50">
+        <div>
+            <h1 class="font-bold text-xl flex items-center gap-3">
+                <div class="bg-emerald-500/10 p-2 rounded-lg ring-1 ring-emerald-500/20">
+                    <i class="fas fa-shield-alt text-emerald-400"></i>
+                </div>
+                <span class="tracking-tight">Nómina <span class="text-emerald-400 font-light">SecureCloud</span> 2025</span>
+            </h1>
+            <p class="text-xs text-slate-400 mt-1 ml-12">Sistema de Liquidación Doméstica</p>
+        </div>
+        <button onclick="cargarHistorial()" class="text-sm bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl transition-all duration-200 border border-slate-600 flex items-center gap-2 shadow-sm hover:shadowActive:scale-95">
+            <i class="fas fa-sync-alt text-emerald-400 animate-spin-slow"></i> Sincronizar Datos
         </button>
     </nav>
 
-    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
-        <div class="bg-white rounded-xl shadow-xl border-t-4 border-slate-800 overflow-hidden">
-            <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-                <h2 class="font-bold text-slate-700">Liquidación Diciembre 2025</h2>
-                <span id="hashDisplay" class="text-[10px] font-mono bg-emerald-100 text-emerald-800 px-2 py-1 rounded border border-emerald-200">Generating...</span>
+        <div class="lg:col-span-7 bg-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden transition-all hover:shadow-[0_8px_30px_-6px_rgba(0,0,0,0.12)]">
+            
+            <div class="px-6 py-5 bg-white border-b border-slate-100 flex justify-between items-center">
+                <div>
+                    <h2 class="font-bold text-lg text-slate-800">Nueva Liquidación</h2>
+                    <p class="text-xs text-slate-500">Cierre Fiscal Diciembre 2025</p>
+                </div>
+                <div class="flex flex-col items-end">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 mb-1">Hash de Transacción</span>
+                    <span id="hashDisplay" class="text-xs font-mono bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-100 shadow-sm tracking-wider">Generating...</span>
+                </div>
             </div>
 
-            <div class="p-6 space-y-4 relative security-bg">
-                <div class="text-xs bg-white/90 p-3 rounded border shadow-sm space-y-1">
-                    <p><strong>Empleador:</strong> <span id="lblEmpleador">DYLAN JOEL VELEZ VILLASAGUA</span></p>
-                    <p><strong>Trabajadora:</strong> <span id="lblTrabajador">MONICA ALEXANDRA MATUTE IBARRA</span></p>
-                    <div class="grid grid-cols-2 mt-2 gap-2 text-[10px] text-gray-500 bg-gray-50 p-2 rounded">
-                        <span><i class="fas fa-clock"></i> Jornada: 5.5 Horas</span>
-                        <span class="font-bold text-emerald-600">Sueldo: $264.38</span>
-                        <span><i class="fas fa-calendar"></i> SBU 2025: $470.00</span>
+            <div class="p-6 space-y-6">
+                
+                <div class="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/60 flex flex-col sm:flex-row gap-4 items-start sm:items-center relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-slate-200/50 text-8xl z-0"><i class="fas fa-user-tie"></i></div>
+                    
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 z-10">
+                        <i class="fas fa-user-circle text-4xl text-slate-300"></i>
+                    </div>
+                    <div class="flex-1 z-10 space-y-1">
+                         <p class="text-xs text-slate-500 font-medium uppercase">Trabajadora</p>
+                        <p id="lblTrabajador" class="text-sm font-bold text-slate-800 leading-tight">MONICA ALEXANDRA MATUTE IBARRA</p>
+                        
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                <i class="fas fa-clock text-blue-500"></i> 5.5 Horas/día
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                <i class="fas fa-money-bill-wave text-emerald-500"></i> Sueldo: $264.38
+                            </span>
+                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                                <i class="fas fa-balance-scale text-purple-500"></i> SBU '25: $470
+                            </span>
+                        </div>
+                    </div>
+                    <div class="hidden">
+                         <span id="lblEmpleador">DYLAN JOEL VELEZ VILLASAGUA</span>
                     </div>
                 </div>
 
-                <div class="bg-blue-50/90 p-3 rounded border border-blue-100">
-                    <div class="flex justify-between items-end mb-2">
-                        <span class="text-xs font-bold text-blue-800 uppercase">Período Laboral</span>
-                        <span class="text-xs bg-white px-2 py-0.5 rounded text-blue-600 border border-blue-200 font-bold">
-                            Días: <span id="lblDias">0</span>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="label-modern text-sm flex items-center gap-2">
+                            <i class="far fa-calendar-alt text-blue-500"></i> Período a Liquidar
+                        </label>
+                         <span class="text-xs font-medium bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100">
+                            <span id="lblDias" class="font-bold text-sm">0</span> Días calculados
                         </span>
                     </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="date" id="fechaIni" class="w-full text-xs border rounded p-1.5 focus:ring-2 focus:ring-blue-400 outline-none">
-                        <input type="date" id="fechaFin" class="w-full text-xs border rounded p-1.5 focus:ring-2 focus:ring-blue-400 outline-none">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"><i class="fas fa-chevron-right"></i> Desde:</span>
+                            <input type="date" id="fechaIni" class="input-modern pl-16 font-medium text-slate-700">
+                        </div>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"><i class="fas fa-chevron-left"></i> Hasta:</span>
+                            <input type="date" id="fechaFin" class="input-modern pl-16 font-medium text-slate-700">
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs font-bold text-gray-600">Horas Extras ($)</label>
-                        <input type="number" id="valExtras" value="0.00" class="w-full text-sm border rounded p-2 focus:border-emerald-500 outline-none">
+                <div class="border-t border-slate-100 my-6"></div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="space-y-3">
+                         <h3 class="text-xs font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                             <i class="fas fa-plus-circle"></i> Adicionales
+                         </h3>
+                        <div>
+                            <label for="valExtras" class="label-modern">Horas Extras (Valor $)</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                                <input type="number" id="valExtras" value="0.00" min="0" step="0.01" class="input-modern pl-8" placeholder="0.00">
+                            </div>
+                        </div>
+                         <div class="pt-2">
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 transition-colors cursor-pointer shadow-sm group">
+                                <input type="checkbox" id="checkDecimos" class="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 transition-all" checked>
+                                <div class="ml-3 flex flex-col">
+                                    <span class="text-sm font-bold text-slate-700 group-hover:text-emerald-700 transition-colors">Incluir Décimos (Mensualizados)</span>
+                                    <span class="text-[11px] text-slate-400">Calcula la parte proporcional del 13vo y 14vo.</span>
+                                </div>
+                            </label>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-600">Préstamos ($)</label>
-                        <input type="number" id="valPrestamos" value="0.00" class="w-full text-sm border border-red-200 bg-red-50 text-red-600 rounded p-2 outline-none">
+                    
+                    <div class="space-y-3 sm:border-l sm:border-slate-100 sm:pl-6">
+                        <h3 class="text-xs font-bold text-red-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                            <i class="fas fa-minus-circle"></i> Deducciones
+                        </h3>
+                        <div>
+                            <label for="valPrestamos" class="label-modern text-red-800/70">Anticipos / Préstamos ($)</label>
+                            <div class="relative">
+                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-red-400 font-bold">$</span>
+                                <input type="number" id="valPrestamos" value="0.00" min="0" step="0.01" class="input-modern pl-8 border-red-100 focus:border-red-400 focus:ring-red-500/20 text-red-600 font-medium bg-red-50/30 placeholder-red-300">
+                            </div>
+                        </div>
+                         <div>
+                            <label class="label-modern">Fecha de Emisión del Documento</label>
+                            <input type="date" id="fechaEmision" class="input-modern text-slate-600">
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 bg-gray-50 p-2 rounded border">
-                    <input type="checkbox" id="checkDecimos" class="text-emerald-600 rounded focus:ring-emerald-500" checked>
-                    <label for="checkDecimos" class="text-xs font-bold text-gray-700 cursor-pointer select-none">Mensualizar Décimos</label>
-                </div>
+                <div class="mt-8 rounded-2xl overflow-hidden shadow-lg font-sans relative z-10">
+                    <div class="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 z-0"></div>
+                    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent z-0"></div>
+                    
+                    <div class="relative z-10 p-6 text-white space-y-4">
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-300 font-medium">Sueldo Proporcional:</span>
+                                <span id="outSueldo" class="font-bold tracking-wide">$0.00</span>
+                            </div>
+                            
+                            <div id="rowDecimos" class="hidden space-y-2 pl-4 border-l-2 border-emerald-500/50 my-3 py-1 transition-all">
+                                <div class="flex justify-between items-center text-emerald-300">
+                                    <span class="flex items-center gap-2"><i class="fas fa-gift text-xs"></i> Décimo 3ero (Proporcional):</span>
+                                    <span id="outDec3" class="font-bold">$0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center text-emerald-300">
+                                    <span class="flex items-center gap-2"><i class="fas fa-graduation-cap text-xs"></i> Décimo 4to (Base SBU $470):</span>
+                                    <span id="outDec4" class="font-bold">$0.00</span>
+                                </div>
+                            </div>
 
-                <div>
-                    <label class="text-xs font-bold text-gray-500">Fecha de Firma (Emisión)</label>
-                    <input type="date" id="fechaEmision" class="w-full text-xs border rounded p-1.5">
-                </div>
+                            <div class="flex justify-between items-center text-red-200/80 pt-2 border-t border-white/10">
+                                <span>Aporte Personal IESS (9.45%):</span>
+                                <span id="outIess" class="font-medium">-$0.00</span>
+                            </div>
+                             <div class="flex justify-between items-center text-red-200/80">
+                                <span>Descuento por Préstamos:</span>
+                                <span id="outPrestamos" class="font-medium">-$0.00</span>
+                            </div>
+                        </div>
 
-                <div class="bg-slate-800 text-white p-4 rounded-lg shadow text-sm space-y-1">
-                    <div class="flex justify-between text-gray-400 text-xs"><span>Sueldo Proporcional:</span> <span id="outSueldo">$0.00</span></div>
-                    <div id="rowDecimos" class="hidden flex flex-col gap-1 border-t border-slate-600 pt-1 mt-1">
-                        <div class="flex justify-between text-emerald-400 text-xs"><span>+ Décimo 3ero:</span> <span id="outDec3">$0.00</span></div>
-                        <div class="flex justify-between text-emerald-400 text-xs"><span>+ Décimo 4to (SBU 470):</span> <span id="outDec4">$0.00</span></div>
+                        <div class="bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm mt-4">
+                            <div class="flex justify-between items-end">
+                                <span class="text-sm font-bold text-emerald-400 uppercase tracking-widest">Total Líquido a Pagar</span>
+                                <span id="outLiquido" class="text-3xl sm:text-4xl font-black text-white tracking-tight leading-none">$0.00</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex justify-between text-red-300 text-xs pt-1"><span>- IESS (9.45%):</span> <span id="outIess">$0.00</span></div>
-                    <div class="flex justify-between text-red-300 text-xs"><span>- Préstamos:</span> <span id="outPrestamos">$0.00</span></div>
-                    <div class="border-t border-slate-600 my-2"></div>
-                    <div class="flex justify-between font-bold text-lg text-yellow-400">
-                        <span>A RECIBIR:</span> <span id="outLiquido">$0.00</span>
-                    </div>
                 </div>
 
-                <button onclick="guardarYGenerar()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg shadow-lg transition flex items-center justify-center gap-2">
-                    <i class="fas fa-barcode"></i> Guardar y Generar PDF
+                <button onclick="guardarYGenerar()" class="group w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-base py-4 px-6 rounded-xl shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-3 relative overflow-hidden">
+                    <span class="absolute inset-0 w-full h-full bg-white/20 group-hover:scale-[2.5] transition-transform duration-500 rounded-full opacity-0 group-hover:opacity-100 origin-center transform scale-0"></span>
+                    <i class="fas fa-file-signature text-xl"></i>
+                    <span>Procesar Pago y Generar Rol PDF</span>
                 </button>
+
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-xl border-t-4 border-blue-600 flex flex-col h-[600px]">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="font-bold text-slate-700 flex items-center gap-2">
-                    <i class="fas fa-database text-blue-600"></i> Historial Cloud
+
+        <div class="lg:col-span-5 bg-white rounded-3xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col h-[800px] transition-all hover:shadow-[0_8px_30px_-6px_rgba(0,0,0,0.12)]">
+            
+            <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white rounded-t-3xl">
+                <h2 class="font-bold text-lg text-slate-800 flex items-center gap-2.5">
+                    <div class="bg-blue-500/10 p-2 rounded-lg">
+                        <i class="fas fa-history text-blue-600"></i>
+                    </div>
+                    Historial de Pagos
                 </h2>
-                <input type="text" id="buscador" placeholder="Buscar..." class="text-xs border rounded px-2 py-1 w-32" onkeyup="filtrarTabla()">
+                <div class="relative w-full sm:w-auto">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="buscador" placeholder="Buscar hash o fecha..." class="input-modern pl-9 py-2 text-xs w-full bg-slate-50 focus:bg-white transition-colors">
+                </div>
             </div>
 
-            <div class="flex-1 overflow-auto bg-slate-50 p-2">
-                <table class="w-full text-xs text-left border-collapse bg-white shadow-sm rounded-lg overflow-hidden">
-                    <thead class="bg-slate-200 text-slate-700 font-bold uppercase sticky top-0">
-                        <tr>
-                            <th class="p-3">Periodo / Hash</th>
-                            <th class="p-3 text-right">Liquido</th>
-                            <th class="p-3 text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaCuerpo" class="divide-y divide-gray-100">
-                        </tbody>
-                </table>
-                <div id="emptyState" class="hidden text-center p-10 text-gray-400">
-                    <i class="fas fa-cloud-download-alt text-3xl mb-2"></i>
-                    <p>Cargando datos...</p>
+            <div class="flex-1 overflow-auto custom-scroll bg-slate-50/50 p-4 rounded-b-3xl">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-100/80 text-xs font-bold text-slate-600 uppercase tracking-wider sticky top-0 z-10 backdrop-blur-md">
+                            <tr>
+                                <th class="p-4 border-b border-slate-200 rounded-tl-xl">Transacción</th>
+                                <th class="p-4 border-b border-slate-200 text-right">Pagado</th>
+                                <th class="p-4 border-b border-slate-200 text-center rounded-tr-xl">Docs</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCuerpo" class="divide-y divide-slate-100 text-sm">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div id="emptyState" class="hidden flex flex-col items-center justify-center py-20 text-slate-400">
+                    <div class="bg-slate-100 p-4 rounded-full mb-4">
+                        <i class="fas fa-cloud-download-alt text-4xl text-slate-300"></i>
+                    </div>
+                    <p class="font-medium text-slate-500 mb-1">No hay datos visualizados</p>
+                    <p class="text-xs">Sincroniza para ver el historial reciente.</p>
                 </div>
             </div>
         </div>
@@ -330,23 +471,45 @@
         }
 
         function setLoading(s) { document.getElementById('loadingOverlay').style.display = s ? 'flex' : 'none'; }
+        
         function renderTabla(datos) {
             const tbody = document.getElementById('tablaCuerpo'); tbody.innerHTML = '';
             if(datos.length === 0) { document.getElementById('emptyState').classList.remove('hidden'); return; }
             document.getElementById('emptyState').classList.add('hidden');
-            datos.forEach(item => {
+            
+            datos.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 const esAnulado = item.estado === 'ANULADO';
-                tr.className = `border-b hover:bg-slate-50 transition ${esAnulado ? 'row-anulado' : ''}`;
+                // Alternar colores de fila para mejor lectura
+                tr.className = `transition-colors ${esAnulado ? 'row-anulado bg-red-50' : (index % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 hover:bg-slate-100')}`;
+                
                 let dataObj = {}; try { dataObj = JSON.parse(item.json); } catch(e) {}
                 const dataStr = JSON.stringify(dataObj).replace(/"/g, '&quot;');
+                
                 tr.innerHTML = `
-                    <td class="p-3"><div class="font-bold text-slate-700 text-xs">${item.periodo}</div><div class="font-mono text-[10px] text-slate-500 mt-1 flex gap-2"><span>${item.hash}</span>${esAnulado ? '<span class="text-red-600 font-bold px-1 border border-red-200 rounded no-strike">ANULADO</span>' : ''}</div></td>
-                    <td class="p-3 text-right font-bold text-slate-800">$${item.liquido}</td>
-                    <td class="p-3 text-center"><button onclick="generarPDF(${dataStr}, '${item.hash}', '${item.estado}')" class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-file-pdf"></i></button>${!esAnulado ? `<button onclick="anularRol('${item.hash}')" class="text-red-400 hover:text-red-600 mx-1"><i class="fas fa-ban"></i></button>` : ''}</td>`;
+                    <td class="p-4 cell-content">
+                        <div class="font-bold text-slate-700 text-sm mb-1">${item.periodo}</div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">${item.hash}</span>
+                            ${esAnulado ? '<span class="no-strike text-[10px] font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full flex items-center gap-1"><i class="fas fa-ban text-[8px]"></i> ANULADO</span>' : ''}
+                        </div>
+                    </td>
+                    <td class="p-4 text-right font-black text-slate-800 text-base cell-content tracking-tight">$${item.liquido}</td>
+                    <td class="p-4 text-center no-strike">
+                        <div class="flex justify-center items-center gap-1">
+                            <button onclick="generarPDF(${dataStr}, '${item.hash}', '${item.estado}')" class="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors" title="Descargar PDF">
+                                <i class="fas fa-file-pdf text-lg"></i>
+                            </button>
+                            ${!esAnulado ? 
+                            `<button onclick="anularRol('${item.hash}')" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Anular Rol">
+                                <i class="fas fa-trash-alt text-sm"></i>
+                            </button>` : ''}
+                        </div>
+                    </td>`;
                 tbody.appendChild(tr);
             });
         }
+        
         function filtrarTabla() {
             const term = document.getElementById('buscador').value.toLowerCase();
             renderTabla(dbLocal.filter(x => x.hash.toLowerCase().includes(term) || x.periodo.toLowerCase().includes(term)));
