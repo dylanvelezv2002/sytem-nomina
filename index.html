@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nómina Doméstica Pro 2025</title>
+    <title>Nómina Doméstica 2025</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -28,7 +28,7 @@
     <nav class="bg-slate-900 text-white p-4 rounded-xl shadow-lg max-w-6xl mx-auto mb-6 flex justify-between items-center">
         <h1 class="font-bold text-lg flex items-center gap-2">
             <i class="fas fa-file-invoice-dollar text-emerald-400"></i>
-            <span>Nómina <span class="text-emerald-400 font-light">SecureCloud</span></span>
+            <span>Nómina <span class="text-emerald-400 font-light">SecureCloud 2025</span></span>
         </h1>
         <button onclick="cargarHistorial()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded transition border border-slate-600">
             <i class="fas fa-sync-alt mr-1"></i> Recargar Datos
@@ -39,7 +39,7 @@
 
         <div class="bg-white rounded-xl shadow-xl border-t-4 border-slate-800 overflow-hidden">
             <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-                <h2 class="font-bold text-slate-700">Nuevo Rol de Pagos (2025)</h2>
+                <h2 class="font-bold text-slate-700">Liquidación Diciembre 2025</h2>
                 <span id="hashDisplay" class="text-[10px] font-mono bg-emerald-100 text-emerald-800 px-2 py-1 rounded border border-emerald-200">Generating...</span>
             </div>
 
@@ -47,9 +47,10 @@
                 <div class="text-xs bg-white/90 p-3 rounded border shadow-sm space-y-1">
                     <p><strong>Empleador:</strong> <span id="lblEmpleador">DYLAN JOEL VELEZ VILLASAGUA</span></p>
                     <p><strong>Trabajadora:</strong> <span id="lblTrabajador">MONICA ALEXANDRA MATUTE IBARRA</span></p>
-                    <div class="flex justify-between mt-1 text-[10px] text-gray-500">
-                        <span><i class="fas fa-clock"></i> Jornada: 5.5 Horas (10:00 - 15:30)</span>
-                        <span class="font-bold text-emerald-600">Base: $270.00</span>
+                    <div class="grid grid-cols-2 mt-2 gap-2 text-[10px] text-gray-500 bg-gray-50 p-2 rounded">
+                        <span><i class="fas fa-clock"></i> Jornada: 5.5 Horas</span>
+                        <span class="font-bold text-emerald-600">Sueldo: $264.38</span>
+                        <span><i class="fas fa-calendar"></i> SBU 2025: $470.00</span>
                     </div>
                 </div>
 
@@ -91,7 +92,7 @@
                     <div class="flex justify-between text-gray-400 text-xs"><span>Sueldo Proporcional:</span> <span id="outSueldo">$0.00</span></div>
                     <div id="rowDecimos" class="hidden flex flex-col gap-1 border-t border-slate-600 pt-1 mt-1">
                         <div class="flex justify-between text-emerald-400 text-xs"><span>+ Décimo 3ero:</span> <span id="outDec3">$0.00</span></div>
-                        <div class="flex justify-between text-emerald-400 text-xs"><span>+ Décimo 4to (Prop. 5.5h):</span> <span id="outDec4">$0.00</span></div>
+                        <div class="flex justify-between text-emerald-400 text-xs"><span>+ Décimo 4to (SBU 470):</span> <span id="outDec4">$0.00</span></div>
                     </div>
                     <div class="flex justify-between text-red-300 text-xs pt-1"><span>- IESS (9.45%):</span> <span id="outIess">$0.00</span></div>
                     <div class="flex justify-between text-red-300 text-xs"><span>- Préstamos:</span> <span id="outPrestamos">$0.00</span></div>
@@ -139,19 +140,17 @@
 
     <script>
         // ==========================================
-        // CONFIGURACIÓN CORREGIDA 2025
+        // CONFIGURACIÓN 2025 (FIN DE AÑO)
         // ==========================================
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwZIcwaAYvjIdGcWBStTBfuNnFUJYlIKr9V87P0Yxt1top6t0RB01iTRPuJOgRY2_Rg/exec";
 
         const DATOS = {
             empleador: { nombre: "DYLAN JOEL VELEZ VILLASAGUA", ci: "0926413667" },
             trabajador: { nombre: "MONICA ALEXANDRA MATUTE IBARRA", ci: "0201600202" },
-            // ACTUALIZADO: SUELDO BASE $270
-            sueldoBase: 270.00, 
-            // SBU NACIONAL (Para cálculo del 14vo)
-            sbu: 460.00,       
-            // HORAS REALES
-            horasDiarias: 5.5  
+            // DATOS EXACTOS DE LA USUARIA
+            sueldoBase: 264.38, 
+            sbu: 470.00,        // SBU OFICIAL 2025
+            horasDiarias: 5.5   // 10:00 a 15:30
         };
 
         let hashActual = "";
@@ -159,9 +158,9 @@
 
         window.onload = () => {
             const hoy = new Date();
-            // Fechas por defecto para cierre 2024/Inicio 2025
-            document.getElementById('fechaIni').value = "2024-12-15";
-            document.getElementById('fechaFin').value = "2024-12-31";
+            // Fechas fijas para el cierre de Diciembre 2025
+            document.getElementById('fechaIni').value = "2025-12-15";
+            document.getElementById('fechaFin').value = "2025-12-31";
             document.getElementById('fechaEmision').valueAsDate = hoy;
             
             generarNuevoHash();
@@ -172,7 +171,7 @@
         function generarNuevoHash() {
             const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
             const mes = (new Date().getMonth() + 1).toString().padStart(2, '0');
-            hashActual = `ROL-${mes}-${rand}`;
+            hashActual = `ROL-25-${mes}-${rand}`;
             document.getElementById('hashDisplay').innerText = hashActual;
         }
 
@@ -191,17 +190,19 @@
             const conDecimos = document.getElementById('checkDecimos').checked;
 
             // --- CÁLCULOS 2025 ---
+            // 1. Sueldo Proporcional
             const sueldoGanado = (DATOS.sueldoBase / 30) * dias;
             let dec3 = 0, dec4 = 0;
             
             if (conDecimos) {
-                // 13vo: Todo lo ganado / 12
+                // 2. Décimo Tercero: (Total Ganado) / 12
                 dec3 = (sueldoGanado + extras) / 12;
                 
-                // 14vo: (SBU Nacional * Factor Horas) / 360 * Días
+                // 3. Décimo Cuarto: SBU 470 * (5.5/8) = Base Proporcional
+                // Luego se divide para 360 y se multiplica por días trabajados
                 const factorProporcionalHoras = DATOS.horasDiarias / 8; // 0.6875
-                const base14voDiaria = (DATOS.sbu * factorProporcionalHoras) / 360;
-                dec4 = base14voDiaria * dias;
+                const base14voAnual = DATOS.sbu * factorProporcionalHoras; // $323.125
+                dec4 = (base14voAnual / 360) * dias;
 
                 document.getElementById('rowDecimos').classList.remove('hidden');
             } else {
@@ -288,7 +289,7 @@
             }
 
             doc.setFontSize(16); doc.setFont("helvetica", "bold");
-            doc.text("ROL DE PAGOS - SERVICIO DOMÉSTICO", 105, 20, null, null, "center");
+            doc.text("ROL DE PAGOS - SERVICIO DOMÉSTICO 2025", 105, 20, null, null, "center");
             doc.setFontSize(10); doc.setFont("helvetica", "normal");
             doc.text(`CÓDIGO: ${hash}`, 105, 27, null, null, "center");
             doc.text(`PERÍODO: ${data.periodoTxt}`, 105, 33, null, null, "center");
@@ -310,7 +311,7 @@
             row(`Sueldo Proporcional (${data.dias} días)`, data.sueldoGanado);
             if(data.extras > 0) row("Horas Extras (+)", data.extras);
             if(data.dec3 > 0) row("Décimo 3ero (Mensualizado)", data.dec3);
-            if(data.dec4 > 0) row("Décimo 4to (Prop. 5.5h)", data.dec4);
+            if(data.dec4 > 0) row("Décimo 4to (SBU $470)", data.dec4);
             row("Aporte IESS 9.45% (-)", data.iess);
             if(data.prestamos > 0) row("Préstamos (-)", data.prestamos);
 
