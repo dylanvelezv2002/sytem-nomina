@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nómina Doméstica Pro</title>
+    <title>Nómina Doméstica Pro 2025</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11,19 +11,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Fondo de seguridad (puntitos) */
-        .security-bg {
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 10px 10px;
-        }
-        /* Spinner de carga */
-        .loader {
-            border: 4px solid #f3f3f3; border-top: 4px solid #10b981;
-            border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;
-        }
+        .security-bg { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 10px 10px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #10b981; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Estilos para filas anuladas */
         .row-anulado { background-color: #fee2e2 !important; color: #991b1b; text-decoration: line-through; }
         .row-anulado .no-strike { text-decoration: none; }
     </style>
@@ -49,7 +39,7 @@
 
         <div class="bg-white rounded-xl shadow-xl border-t-4 border-slate-800 overflow-hidden">
             <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
-                <h2 class="font-bold text-slate-700">Nuevo Rol de Pagos</h2>
+                <h2 class="font-bold text-slate-700">Nuevo Rol de Pagos (2025)</h2>
                 <span id="hashDisplay" class="text-[10px] font-mono bg-emerald-100 text-emerald-800 px-2 py-1 rounded border border-emerald-200">Generating...</span>
             </div>
 
@@ -57,6 +47,10 @@
                 <div class="text-xs bg-white/90 p-3 rounded border shadow-sm space-y-1">
                     <p><strong>Empleador:</strong> <span id="lblEmpleador">DYLAN JOEL VELEZ VILLASAGUA</span></p>
                     <p><strong>Trabajadora:</strong> <span id="lblTrabajador">MONICA ALEXANDRA MATUTE IBARRA</span></p>
+                    <div class="flex justify-between mt-1 text-[10px] text-gray-500">
+                        <span><i class="fas fa-clock"></i> Jornada: 5.5 Horas (10:00 - 15:30)</span>
+                        <span class="font-bold text-emerald-600">Base: $270.00</span>
+                    </div>
                 </div>
 
                 <div class="bg-blue-50/90 p-3 rounded border border-blue-100">
@@ -84,8 +78,8 @@
                 </div>
 
                 <div class="flex items-center gap-2 bg-gray-50 p-2 rounded border">
-                    <input type="checkbox" id="checkDecimos" class="text-emerald-600 rounded focus:ring-emerald-500">
-                    <label for="checkDecimos" class="text-xs font-bold text-gray-700 cursor-pointer select-none">Incluir Décimos (Acumulados)</label>
+                    <input type="checkbox" id="checkDecimos" class="text-emerald-600 rounded focus:ring-emerald-500" checked>
+                    <label for="checkDecimos" class="text-xs font-bold text-gray-700 cursor-pointer select-none">Mensualizar Décimos</label>
                 </div>
 
                 <div>
@@ -94,9 +88,12 @@
                 </div>
 
                 <div class="bg-slate-800 text-white p-4 rounded-lg shadow text-sm space-y-1">
-                    <div class="flex justify-between text-gray-400 text-xs"><span>Sueldo Base:</span> <span id="outSueldo">$0.00</span></div>
-                    <div id="rowDecimos" class="hidden flex justify-between text-emerald-400 text-xs"><span>+ Décimos:</span> <span id="outDecimos">$0.00</span></div>
-                    <div class="flex justify-between text-red-300 text-xs"><span>- IESS (9.45%):</span> <span id="outIess">$0.00</span></div>
+                    <div class="flex justify-between text-gray-400 text-xs"><span>Sueldo Proporcional:</span> <span id="outSueldo">$0.00</span></div>
+                    <div id="rowDecimos" class="hidden flex flex-col gap-1 border-t border-slate-600 pt-1 mt-1">
+                        <div class="flex justify-between text-emerald-400 text-xs"><span>+ Décimo 3ero:</span> <span id="outDec3">$0.00</span></div>
+                        <div class="flex justify-between text-emerald-400 text-xs"><span>+ Décimo 4to (Prop. 5.5h):</span> <span id="outDec4">$0.00</span></div>
+                    </div>
+                    <div class="flex justify-between text-red-300 text-xs pt-1"><span>- IESS (9.45%):</span> <span id="outIess">$0.00</span></div>
                     <div class="flex justify-between text-red-300 text-xs"><span>- Préstamos:</span> <span id="outPrestamos">$0.00</span></div>
                     <div class="border-t border-slate-600 my-2"></div>
                     <div class="flex justify-between font-bold text-lg text-yellow-400">
@@ -142,39 +139,36 @@
 
     <script>
         // ==========================================
-        // CONFIGURACIÓN (Pega tu URL Aquí)
+        // CONFIGURACIÓN CORREGIDA 2025
         // ==========================================
         const URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbwZIcwaAYvjIdGcWBStTBfuNnFUJYlIKr9V87P0Yxt1top6t0RB01iTRPuJOgRY2_Rg/exec";
 
-        // Datos Constantes
         const DATOS = {
             empleador: { nombre: "DYLAN JOEL VELEZ VILLASAGUA", ci: "0926413667" },
             trabajador: { nombre: "MONICA ALEXANDRA MATUTE IBARRA", ci: "0201600202" },
-            sueldoBase: 264.38,
-            sbu: 470.00
+            // ACTUALIZADO: SUELDO BASE $270
+            sueldoBase: 270.00, 
+            // SBU NACIONAL (Para cálculo del 14vo)
+            sbu: 460.00,       
+            // HORAS REALES
+            horasDiarias: 5.5  
         };
 
         let hashActual = "";
-        let dbLocal = []; // Cache para búsqueda rápida
+        let dbLocal = []; 
 
-        // ==========================================
-        // INICIO
-        // ==========================================
         window.onload = () => {
             const hoy = new Date();
-            // Default: primer día del mes al día actual
-            document.getElementById('fechaIni').valueAsDate = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-            document.getElementById('fechaFin').valueAsDate = hoy;
+            // Fechas por defecto para cierre 2024/Inicio 2025
+            document.getElementById('fechaIni').value = "2024-12-15";
+            document.getElementById('fechaFin').value = "2024-12-31";
             document.getElementById('fechaEmision').valueAsDate = hoy;
             
             generarNuevoHash();
             calcular();
-            cargarHistorial(); // Cargar datos de la nube
+            cargarHistorial(); 
         };
 
-        // ==========================================
-        // LÓGICA DE CÁLCULO
-        // ==========================================
         function generarNuevoHash() {
             const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
             const mes = (new Date().getMonth() + 1).toString().padStart(2, '0');
@@ -182,30 +176,33 @@
             document.getElementById('hashDisplay').innerText = hashActual;
         }
 
-        // Event Listeners
         ['fechaIni', 'fechaFin'].forEach(id => document.getElementById(id).addEventListener('change', calcular));
         ['valExtras', 'valPrestamos', 'checkDecimos'].forEach(id => document.getElementById(id).addEventListener('input', calcular));
 
         function calcular() {
-            // 1. Días
             const d1 = new Date(document.getElementById('fechaIni').value);
             const d2 = new Date(document.getElementById('fechaFin').value);
             let dias = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
-            if (dias < 0) dias = 0;
+            if (dias < 0 || isNaN(dias)) dias = 0;
             document.getElementById('lblDias').innerText = dias;
 
-            // 2. Valores
             const extras = parseFloat(document.getElementById('valExtras').value) || 0;
             const prestamos = parseFloat(document.getElementById('valPrestamos').value) || 0;
             const conDecimos = document.getElementById('checkDecimos').checked;
 
-            // Cálculos
+            // --- CÁLCULOS 2025 ---
             const sueldoGanado = (DATOS.sueldoBase / 30) * dias;
             let dec3 = 0, dec4 = 0;
             
             if (conDecimos) {
+                // 13vo: Todo lo ganado / 12
                 dec3 = (sueldoGanado + extras) / 12;
-                dec4 = (DATOS.sbu / 360) * dias;
+                
+                // 14vo: (SBU Nacional * Factor Horas) / 360 * Días
+                const factorProporcionalHoras = DATOS.horasDiarias / 8; // 0.6875
+                const base14voDiaria = (DATOS.sbu * factorProporcionalHoras) / 360;
+                dec4 = base14voDiaria * dias;
+
                 document.getElementById('rowDecimos').classList.remove('hidden');
             } else {
                 document.getElementById('rowDecimos').classList.add('hidden');
@@ -214,14 +211,15 @@
             const iess = (sueldoGanado + extras) * 0.0945;
             const liquido = (sueldoGanado + extras + dec3 + dec4) - iess - prestamos;
 
-            // Render
             document.getElementById('outSueldo').innerText = `$${sueldoGanado.toFixed(2)}`;
-            document.getElementById('outDecimos').innerText = `$${(dec3 + dec4).toFixed(2)}`;
+            if(conDecimos){
+                document.getElementById('outDec3').innerText = `$${dec3.toFixed(2)}`;
+                document.getElementById('outDec4').innerText = `$${dec4.toFixed(2)}`;
+            }
             document.getElementById('outIess').innerText = `$${iess.toFixed(2)}`;
             document.getElementById('outPrestamos').innerText = `$${prestamos.toFixed(2)}`;
             document.getElementById('outLiquido').innerText = `$${liquido.toFixed(2)}`;
 
-            // Retornar objeto completo para guardar
             return {
                 dias, sueldoGanado, extras, dec3, dec4, iess, prestamos, liquido,
                 periodoTxt: `${document.getElementById('fechaIni').value} al ${document.getElementById('fechaFin').value}`,
@@ -229,224 +227,128 @@
             };
         }
 
-        // ==========================================
-        // CONEXIÓN CON GOOGLE SHEETS
-        // ==========================================
         async function cargarHistorial() {
             setLoading(true);
             try {
                 const res = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: JSON.stringify({ accion: 'leer' }) });
                 const json = await res.json();
-                if (json.result === 'success') {
-                    dbLocal = json.data;
-                    renderTabla(dbLocal);
-                }
-            } catch (e) { console.error(e); alert("Error cargando historial"); }
+                if (json.result === 'success') { dbLocal = json.data; renderTabla(dbLocal); }
+            } catch (e) { console.error(e); }
             setLoading(false);
         }
 
         async function guardarYGenerar() {
             if(URL_APPS_SCRIPT.includes("TU_URL")) return alert("¡Configura la URL del Script!");
-            
             const calcs = calcular();
             if (calcs.dias <= 0) return alert("Revisa las fechas");
-            
             setLoading(true);
 
-            // 1. Preparar Payload (La Data Completa)
             const payload = {
                 hash: hashActual,
                 periodo_txt: calcs.periodoTxt,
                 monto: calcs.liquido.toFixed(2),
-                detalle_completo: { ...calcs, ...DATOS } // Guardamos TODO
+                detalle_completo: { ...calcs, ...DATOS } 
             };
 
             try {
-                // 2. Enviar a Google Sheets
-                const res = await fetch(URL_APPS_SCRIPT, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ accion: 'guardar', payload: payload }) 
-                });
+                const res = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: JSON.stringify({ accion: 'guardar', payload: payload }) });
                 const json = await res.json();
-                
                 if (json.result === 'success') {
-                    // 3. Generar PDF
                     generarPDF(payload.detalle_completo, hashActual, 'ACTIVO');
-                    // 4. Actualizar UI
                     generarNuevoHash();
-                    cargarHistorial(); // Recarga la tabla
-                } else {
-                    alert("Error guardando: " + json.msg);
-                }
+                    cargarHistorial();
+                } else { alert("Error guardando: " + json.msg); }
             } catch (e) { alert("Error de conexión"); }
             setLoading(false);
         }
 
         async function anularRol(hash) {
-            if (!confirm("¿Seguro que quieres ANULAR este rol?")) return;
+            if (!confirm("¿Anular este rol?")) return;
             setLoading(true);
             try {
-                const res = await fetch(URL_APPS_SCRIPT, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ accion: 'anular', hash: hash }) 
-                });
+                const res = await fetch(URL_APPS_SCRIPT, { method: 'POST', body: JSON.stringify({ accion: 'anular', hash: hash }) });
                 const json = await res.json();
-                if (json.result === 'success') {
-                    cargarHistorial();
-                } else {
-                    alert(json.msg);
-                }
+                if (json.result === 'success') cargarHistorial();
+                else alert(json.msg);
             } catch (e) { alert("Error anulando"); }
             setLoading(false);
         }
 
-        // ==========================================
-        // GENERACIÓN DE PDF
-        // ==========================================
         function generarPDF(data, hash, estado) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // 1. Fondo de Seguridad (Tramado)
+            // Fondo
             doc.setFillColor(245, 245, 245);
-            for(let i=0; i<300; i+=10) {
-                for(let j=0; j<300; j+=10) {
-                    doc.circle(i, j, 0.5, 'F');
-                }
-            }
+            for(let i=0; i<300; i+=10) { for(let j=0; j<300; j+=10) { doc.circle(i, j, 0.5, 'F'); } }
 
-            // 2. Marca de Agua ANULADO
             if (estado === 'ANULADO') {
-                doc.setTextColor(255, 200, 200);
-                doc.setFontSize(60);
-                doc.setFont("helvetica", "bold");
-                doc.text("ANULADO", 50, 150, { angle: 45 });
-                doc.setTextColor(0,0,0); // Reset color
+                doc.setTextColor(255, 200, 200); doc.setFontSize(60); doc.setFont("helvetica", "bold");
+                doc.text("ANULADO", 50, 150, { angle: 45 }); doc.setTextColor(0,0,0);
             }
 
-            // 3. Encabezado
             doc.setFontSize(16); doc.setFont("helvetica", "bold");
             doc.text("ROL DE PAGOS - SERVICIO DOMÉSTICO", 105, 20, null, null, "center");
-            
             doc.setFontSize(10); doc.setFont("helvetica", "normal");
-            doc.text(`CÓDIGO ÚNICO: ${hash}`, 105, 27, null, null, "center");
+            doc.text(`CÓDIGO: ${hash}`, 105, 27, null, null, "center");
             doc.text(`PERÍODO: ${data.periodoTxt}`, 105, 33, null, null, "center");
 
-            // 4. Datos Personales
-            doc.setDrawColor(0); doc.setFillColor(255, 255, 255);
-            doc.rect(15, 40, 180, 25, 'FD');
-            
+            doc.setDrawColor(0); doc.setFillColor(255, 255, 255); doc.rect(15, 40, 180, 25, 'FD');
             doc.setFontSize(9);
-            doc.text(`EMPLEADOR: ${data.empleador.nombre}`, 20, 48);
-            doc.text(`CI: ${data.empleador.ci}`, 20, 53);
-            
-            doc.text(`TRABAJADORA: ${data.trabajador.nombre}`, 20, 60);
-            doc.text(`CI: ${data.trabajador.ci}`, 140, 60);
+            doc.text(`EMPLEADOR: ${data.empleador.nombre}`, 20, 48); doc.text(`CI: ${data.empleador.ci}`, 20, 53);
+            doc.text(`TRABAJADORA: ${data.trabajador.nombre}`, 20, 60); doc.text(`CI: ${data.trabajador.ci}`, 140, 60);
+            doc.text(`Sueldo Base: $${data.sueldoBase}`, 140, 48); doc.text(`Jornada: ${data.horasDiarias} Horas`, 140, 53);
 
-            // 5. Tabla Detalles
             let y = 75;
-            doc.setFillColor(30, 41, 59); // Slate 800
-            doc.rect(15, y, 180, 8, 'F');
+            doc.setFillColor(30, 41, 59); doc.rect(15, y, 180, 8, 'F');
             doc.setTextColor(255); doc.setFont("helvetica", "bold");
             doc.text("RUBRO", 20, y+5); doc.text("MONTO", 185, y+5, null, null, "right");
             
             y += 15; doc.setTextColor(0); doc.setFont("helvetica", "normal");
-            
-            const row = (label, val) => {
-                doc.text(label, 20, y);
-                doc.text(parseFloat(val).toFixed(2), 185, y, null, null, "right");
-                y += 7;
-            };
+            const row = (label, val) => { doc.text(label, 20, y); doc.text(parseFloat(val).toFixed(2), 185, y, null, null, "right"); y += 7; };
 
             row(`Sueldo Proporcional (${data.dias} días)`, data.sueldoGanado);
             if(data.extras > 0) row("Horas Extras (+)", data.extras);
-            if((data.dec3 + data.dec4) > 0) row("Décimos Acumulados (+)", data.dec3 + data.dec4);
+            if(data.dec3 > 0) row("Décimo 3ero (Mensualizado)", data.dec3);
+            if(data.dec4 > 0) row("Décimo 4to (Prop. 5.5h)", data.dec4);
             row("Aporte IESS 9.45% (-)", data.iess);
             if(data.prestamos > 0) row("Préstamos (-)", data.prestamos);
 
-            // Total
             y += 5; doc.setLineWidth(0.5); doc.line(15, y, 195, y); y += 10;
             doc.setFontSize(12); doc.setFont("helvetica", "bold");
-            doc.text("LÍQUIDO A RECIBIR:", 20, y);
-            doc.text(`$ ${parseFloat(data.liquido).toFixed(2)}`, 185, y, null, null, "right");
+            doc.text("LÍQUIDO A RECIBIR:", 20, y); doc.text(`$ ${parseFloat(data.liquido).toFixed(2)}`, 185, y, null, null, "right");
 
-            // 6. CÓDIGO DE BARRAS (GENERADO AL VUELO)
             const canvas = document.createElement("canvas");
             JsBarcode(canvas, hash, { format: "CODE128", displayValue: false });
-            const barcodeImg = canvas.toDataURL("image/jpeg");
+            y += 20; doc.addImage(canvas.toDataURL("image/jpeg"), 'JPEG', 70, y, 70, 15);
             
-            y += 20;
-            doc.addImage(barcodeImg, 'JPEG', 70, y, 70, 15);
-            doc.setFontSize(8); doc.setFont("helvetica", "normal");
-            doc.text("Firma Digital del Documento", 105, y+20, null, null, "center");
-            doc.text(`Emisión: ${data.emision}`, 105, y+25, null, null, "center");
-
-            // 7. Firmas
-            y += 40;
-            doc.line(30, y, 80, y); doc.line(130, y, 180, y);
-            doc.text("EMPLEADOR", 55, y+5, null, null, "center");
-            doc.text("RECIBÍ CONFORME", 155, y+5, null, null, "center");
+            y += 40; doc.line(30, y, 80, y); doc.line(130, y, 180, y);
+            doc.setFontSize(8); doc.text("EMPLEADOR", 55, y+5, null, null, "center"); doc.text("RECIBÍ CONFORME", 155, y+5, null, null, "center");
 
             doc.save(`Rol_${hash}.pdf`);
         }
 
-        // ==========================================
-        // UTILIDADES UI
-        // ==========================================
-        function setLoading(state) {
-            document.getElementById('loadingOverlay').style.display = state ? 'flex' : 'none';
-        }
-
+        function setLoading(s) { document.getElementById('loadingOverlay').style.display = s ? 'flex' : 'none'; }
         function renderTabla(datos) {
-            const tbody = document.getElementById('tablaCuerpo');
-            tbody.innerHTML = '';
-            
-            if(datos.length === 0) {
-                document.getElementById('emptyState').classList.remove('hidden');
-                return;
-            }
+            const tbody = document.getElementById('tablaCuerpo'); tbody.innerHTML = '';
+            if(datos.length === 0) { document.getElementById('emptyState').classList.remove('hidden'); return; }
             document.getElementById('emptyState').classList.add('hidden');
-
             datos.forEach(item => {
                 const tr = document.createElement('tr');
                 const esAnulado = item.estado === 'ANULADO';
                 tr.className = `border-b hover:bg-slate-50 transition ${esAnulado ? 'row-anulado' : ''}`;
-                
-                // Preparamos el JSON para pasarlo a la función de imprimir
-                // Nota: item.json viene de Apps Script como string, hay que parsearlo
-                let dataObj = null;
-                try { dataObj = JSON.parse(item.json); } catch(e) { dataObj = {}; }
-                
-                // Importante: Escapamos comillas para el HTML inline onclick
+                let dataObj = {}; try { dataObj = JSON.parse(item.json); } catch(e) {}
                 const dataStr = JSON.stringify(dataObj).replace(/"/g, '&quot;');
-
                 tr.innerHTML = `
-                    <td class="p-3">
-                        <div class="font-bold text-slate-700 text-xs">${item.periodo}</div>
-                        <div class="font-mono text-[10px] text-slate-500 mt-1 flex items-center gap-2">
-                            <span>${item.hash}</span>
-                            ${esAnulado ? '<span class="text-red-600 font-bold px-1 border border-red-200 rounded no-strike">ANULADO</span>' : ''}
-                        </div>
-                    </td>
+                    <td class="p-3"><div class="font-bold text-slate-700 text-xs">${item.periodo}</div><div class="font-mono text-[10px] text-slate-500 mt-1 flex gap-2"><span>${item.hash}</span>${esAnulado ? '<span class="text-red-600 font-bold px-1 border border-red-200 rounded no-strike">ANULADO</span>' : ''}</div></td>
                     <td class="p-3 text-right font-bold text-slate-800">$${item.liquido}</td>
-                    <td class="p-3 text-center no-strike">
-                        <button onclick="generarPDF(${dataStr}, '${item.hash}', '${item.estado}')" class="text-blue-500 hover:text-blue-700 mx-1" title="Descargar PDF">
-                            <i class="fas fa-file-pdf"></i>
-                        </button>
-                        ${!esAnulado ? 
-                        `<button onclick="anularRol('${item.hash}')" class="text-red-400 hover:text-red-600 mx-1" title="Anular">
-                            <i class="fas fa-ban"></i>
-                        </button>` : ''}
-                    </td>
-                `;
+                    <td class="p-3 text-center"><button onclick="generarPDF(${dataStr}, '${item.hash}', '${item.estado}')" class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-file-pdf"></i></button>${!esAnulado ? `<button onclick="anularRol('${item.hash}')" class="text-red-400 hover:text-red-600 mx-1"><i class="fas fa-ban"></i></button>` : ''}</td>`;
                 tbody.appendChild(tr);
             });
         }
-
         function filtrarTabla() {
             const term = document.getElementById('buscador').value.toLowerCase();
-            const filtrados = dbLocal.filter(x => x.hash.toLowerCase().includes(term) || x.periodo.toLowerCase().includes(term));
-            renderTabla(filtrados);
+            renderTabla(dbLocal.filter(x => x.hash.toLowerCase().includes(term) || x.periodo.toLowerCase().includes(term)));
         }
     </script>
 </body>
